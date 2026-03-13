@@ -64,7 +64,7 @@ async def stockpile(interaction:discord.Interaction, region:str):
     data = database.get_stockpile(region)
 
     if not data:
-        await interaction.response.send_message("Region not found.")
+        await interaction.response.send_message("Region not found.", ephemeral=True)
         return
 
     msg = f"**{region} Stockpile**\n"
@@ -72,7 +72,7 @@ async def stockpile(interaction:discord.Interaction, region:str):
     for r,a in data.items():
         msg += f"{r}: {a}\n"
 
-    await interaction.response.send_message(msg)
+    await interaction.response.send_message(msg, ephemeral=True)
 
 # -------------------
 # TRADE CONFIRMATION
@@ -206,7 +206,7 @@ async def modstock(interaction:discord.Interaction,region:str,resource:str,amoun
 
     msg = f"{region} {resource} {'+' if amount>=0 else ''}{amount}"
 
-    await interaction.response.send_message(msg)
+    await interaction.response.send_message(msg, ephemeral=True)
 
     log = await log_channel(interaction.guild)
     await log.send(f"MOD: {msg}")

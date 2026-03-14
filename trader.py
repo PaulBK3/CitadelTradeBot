@@ -100,7 +100,7 @@ async def stockpile(interaction: discord.Interaction):
         msg += f"{resource}: {amount}\n"
 
     print("STOCKPILE CALLED", region)
-    
+
     await interaction.followup.send(msg, ephemeral=True)
 
 #for staff
@@ -177,7 +177,7 @@ class TradeConfirm(discord.ui.View):
         await interaction.response.edit_message(content=msg,view=None)
         print("Trade confirmed:", self.sender, self.receiver, self.resource, self.amount)
         log = await log_channel(interaction.guild)
-        await log.send(f"Trade #{trade_id}\n" + msg)
+        await log.send(f"Trade #{trade_id}\n" + msg + "\n=======================\n")
 
     @discord.ui.button(label="Cancel", style=discord.ButtonStyle.red)
 
@@ -299,7 +299,7 @@ async def modstock(
     await interaction.followup.send(msg, ephemeral=True)
 
     log = await log_channel(interaction.guild)
-    await log.send(f"Modified: {msg}")
+    await log.send(f"Modified: {msg + "\n=======================\n"}")
 
 # -------------------
 # WEEKLY PRODUCTION
@@ -315,12 +315,12 @@ class ProductionConfirm(discord.ui.View):
         msg = "**Production Applied**\n"
 
         for region, resources in config.PRODUCTION.items():
-
+            msg += f"**{region}**\n"
             for resource, amount in resources.items():
 
                 database.change_resource(region, resource, amount)
-                msg += f"{region}: +{amount} {resource}\n"
-            msg += "\n"
+                msg += f"{amount} {resource}\n"
+            msg += "--------------------------\n"
 
         await interaction.response.edit_message(
             content=msg,
@@ -329,7 +329,7 @@ class ProductionConfirm(discord.ui.View):
 
         log = await log_channel(interaction.guild)
         if log:
-            await log.send(msg)
+            await log.send(msg + "\n=======================\n")
 
     @discord.ui.button(label="Cancel", style=discord.ButtonStyle.red)
     async def cancel(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -356,7 +356,7 @@ async def weekly_production():
             msg += f"{region}: +{amount} {resource}\n"
 
     if log:
-        await log.send(msg)
+        await log.send(msg+ "\n=======================\n")
 
 @bot.tree.command(name="production", description="Apply weekly production")
 
@@ -396,12 +396,12 @@ class MaintenanceConfirm(discord.ui.View):
         msg = "**Maintenance Applied**\n"
 
         for region, resources in config.MAINTENANCE.items():
-
+            msg += f"**{region}**\n"
             for resource, amount in resources.items():
 
                 database.change_resource(region, resource, -amount)
-                msg += f"{region}: -{amount} {resource}\n"
-            msg += "\n"
+                msg += f"{amount} {resource}\n"
+            msg += "--------------------------\n"
 
         await interaction.response.edit_message(
             content=msg,
@@ -410,7 +410,7 @@ class MaintenanceConfirm(discord.ui.View):
 
         log = await log_channel(interaction.guild)
         if log:
-            await log.send(msg)
+            await log.send(msg+ "\n=======================\n")
 
     @discord.ui.button(label="Cancel", style=discord.ButtonStyle.red)
     async def cancel(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -437,7 +437,7 @@ async def weekly_maintenance():
             msg += f"{region}: -{amount} {resource}\n"
 
     if log:
-        await log.send(msg)
+        await log.send(msg + "\n=======================\n")
 
 @bot.tree.command(name="maintenance", description="Apply maintenance costs")
 

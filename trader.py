@@ -73,7 +73,7 @@ async def on_ready():
 @bot.tree.command(name="stockpile", description="View your region's stockpile")
 async def stockpile(interaction: discord.Interaction):
 
-    if not has_role(interaction.user, config.TRADE_CHARTA_ROLE):
+    if not has_role(interaction.user, config.TRADE_CHARTER_ROLE):
 
         await interaction.response.send_message(
             "You need the Trade Charta role.",
@@ -195,7 +195,7 @@ class TradeConfirm(discord.ui.View):
 
 async def trade(interaction:discord.Interaction,receiver:str,resource:str,amount:int):
 
-    if not has_role(interaction.user,config.TRADE_CHARTA_ROLE):
+    if not has_role(interaction.user,config.TRADE_CHARTER_ROLE):
 
         await interaction.response.send_message(
             "You lack Trade Charta.",

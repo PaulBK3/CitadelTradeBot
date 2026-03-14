@@ -294,11 +294,11 @@ async def modstock(interaction:discord.Interaction,region:str,resource:str,amoun
     log = await log_channel(interaction.guild)
     await log.send(f"Modified: {msg}")
 
-@modstock.autocomplete("Region")
+@modstock.autocomplete("region")
 async def modstock_region_autocomplete(interaction, current):
     return await region_autocomplete(interaction, current)
 
-@modstock.autocomplete("Resource")
+@modstock.autocomplete("resource")
 async def modstock_resource_autocomplete(interaction, current):
     return await resource_autocomplete(interaction, current)
 # -------------------

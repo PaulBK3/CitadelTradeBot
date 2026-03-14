@@ -15,6 +15,16 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 
 database.setup()
 
+REGION_CHOICES = [
+    app_commands.Choice(name=r, value=r)
+    for r in config.REGION_ROLES
+]
+
+RESOURCE_CHOICES = [
+    app_commands.Choice(name=r, value=r)
+    for r in config.RESOURCES
+]
+
 # -------------------
 # Helpers
 # -------------------
@@ -39,28 +49,7 @@ async def log_channel(guild):
     for channel in guild.text_channels:
         if channel.name == config.TRADE_LOG_CHANNEL:
             return channel
-        
-async def region_autocomplete(
-    interaction: discord.Interaction,
-    current: str
-):
 
-    return [
-        app_commands.Choice(name=r, value=r)
-        for r in config.REGION_ROLES
-        if current.lower() in r.lower()
-    ]
-
-async def resource_autocomplete(
-    interaction: discord.Interaction,
-    current: str
-):
-
-    return [
-        app_commands.Choice(name=r, value=r)
-        for r in config.RESOURCES
-        if current.lower() in r.lower()
-    ]
 # -------------------
 # Ready
 # -------------------
@@ -116,6 +105,10 @@ async def stockpile(interaction: discord.Interaction):
 
 @app_commands.describe(region="Region to inspect")
 
+@app_commands.choices(
+    region=REGION_CHOICES
+)
+
 async def stockpile_region(interaction: discord.Interaction, region: str):
 
     if not has_role(interaction.user, config.TRADE_TEAM_ROLE):
@@ -143,9 +136,6 @@ async def stockpile_region(interaction: discord.Interaction, region: str):
 
     await interaction.response.send_message(msg, ephemeral=True)
 
-@stockpile_region.autocomplete("region")
-async def stockpile_region_autocomplete(interaction, current):
-    return await region_autocomplete(interaction, current)
 # -------------------
 # TRADE CONFIRMATION
 # -------------------
@@ -200,6 +190,11 @@ class TradeConfirm(discord.ui.View):
     receiver="Region receiving goods",
     resource="Resource type",
     amount="Amount to send"
+)
+
+@app_commands.choices(
+    receiver=REGION_CHOICES,
+    resource=RESOURCE_CHOICES
 )
 
 async def trade(
@@ -261,20 +256,22 @@ async def trade(
         ephemeral=True
     )
 
-@trade.autocomplete("receiver")
-async def trade_region_autocomplete(interaction, current):
-    return await region_autocomplete(interaction, current)
-
-@trade.autocomplete("resource")
-async def stockpile_resource_autocomplete(interaction, current):
-    return await resource_autocomplete(interaction, current)
 # -------------------
 # MODIFY STOCKPILE
 # -------------------
 
 @bot.tree.command(name="modstock")
 
-async def modstock(interaction:discord.Interaction,region:str,resource:str,amount:int):
+@app_commands.choices(
+    region=REGION_CHOICES,
+    resource=RESOURCE_CHOICES
+)
+
+async def modstock(
+    interaction:discord.Interaction,
+    region:str,
+    resource:str,
+    amount:int):
 
     if not has_role(interaction.user,config.TRADE_TEAM_ROLE):
 
@@ -294,13 +291,6 @@ async def modstock(interaction:discord.Interaction,region:str,resource:str,amoun
     log = await log_channel(interaction.guild)
     await log.send(f"Modified: {msg}")
 
-@modstock.autocomplete("region")
-async def modstock_region_autocomplete(interaction, current):
-    return await region_autocomplete(interaction, current)
-
-@modstock.autocomplete("resource")
-async def modstock_resource_autocomplete(interaction, current):
-    return await resource_autocomplete(interaction, current)
 # -------------------
 # WEEKLY PRODUCTION
 # -------------------

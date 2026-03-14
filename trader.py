@@ -39,6 +39,18 @@ async def log_channel(guild):
     for channel in guild.text_channels:
         if channel.name == config.TRADE_LOG_CHANNEL:
             return channel
+        
+async def region_autocomplete(
+    interaction: discord.Interaction,
+    current: str
+):
+
+    return [
+        app_commands.Choice(name=r, value=r)
+        for r in config.REGION_ROLES
+        if current.lower() in r.lower()
+    ]
+    
 # -------------------
 # Ready
 # -------------------
@@ -57,23 +69,73 @@ async def on_ready():
 # STOCKPILE
 # -------------------
 
-@bot.tree.command(name="stockpile")
+#for player
+@bot.tree.command(name="stockpile", description="View your region's stockpile")
+async def stockpile(interaction: discord.Interaction):
 
-async def stockpile(interaction:discord.Interaction, region:str):
+    if not has_role(interaction.user, config.TRADE_CHARTA_ROLE):
+
+        await interaction.response.send_message(
+            "You need the Trade Charta role.",
+            ephemeral=True
+        )
+        return
+
+    region = get_region(interaction.user)
+
+    if not region:
+
+        await interaction.response.send_message(
+            "No valid region role found.",
+            ephemeral=True
+        )
+        return
 
     data = database.get_stockpile(region)
 
-    if not data:
-        await interaction.response.send_message("Region not found.", ephemeral=True)
-        return
-
     msg = f"**{region} Stockpile**\n"
 
-    for r,a in data.items():
-        msg += f"{r}: {a}\n"
+    for resource, amount in data.items():
+        msg += f"{resource}: {amount}\n"
 
     await interaction.response.send_message(msg, ephemeral=True)
 
+#for staff
+
+@bot.tree.command(name="stockpile_region", description="View a specific region's stockpile")
+
+@app_commands.describe(region="Region to inspect")
+
+async def stockpile_region(interaction: discord.Interaction, region: str):
+
+    if not has_role(interaction.user, config.TRADE_TEAM_ROLE):
+
+        await interaction.response.send_message(
+            "Trade Team only.",
+            ephemeral=True
+        )
+        return
+
+    if region not in config.REGION_ROLES:
+
+        await interaction.response.send_message(
+            "Invalid region.",
+            ephemeral=True
+        )
+        return
+
+    data = database.get_stockpile(region)
+
+    msg = f"**{region} Stockpile**\n"
+
+    for resource, amount in data.items():
+        msg += f"{resource}: {amount}\n"
+
+    await interaction.response.send_message(msg, ephemeral=True)
+
+@stockpile_region.autocomplete("region")
+async def stockpile_region_autocomplete(interaction, current):
+    return await region_autocomplete(interaction, current)
 # -------------------
 # TRADE CONFIRMATION
 # -------------------
@@ -214,6 +276,39 @@ async def modstock(interaction:discord.Interaction,region:str,resource:str,amoun
 # -------------------
 # WEEKLY PRODUCTION
 # -------------------
+class ProductionConfirm(discord.ui.View):
+
+    def __init__(self):
+        super().__init__(timeout=30)
+
+    @discord.ui.button(label="Confirm Production", style=discord.ButtonStyle.green)
+    async def confirm(self, interaction: discord.Interaction, button: discord.ui.Button):
+
+        msg = "**Production Applied**\n"
+
+        for region, resources in config.PRODUCTION.items():
+
+            for resource, amount in resources.items():
+
+                database.change_resource(region, resource, amount)
+                msg += f"{region}: +{amount} {resource}\n"
+
+        await interaction.response.edit_message(
+            content=msg,
+            view=None
+        )
+
+        log = await log_channel(interaction.guild)
+        if log:
+            await log.send(msg)
+
+    @discord.ui.button(label="Cancel", style=discord.ButtonStyle.red)
+    async def cancel(self, interaction: discord.Interaction, button: discord.ui.Button):
+
+        await interaction.response.edit_message(
+            content="Production cancelled.",
+            view=None
+        )
 
 @tasks.loop(hours=168)
 async def weekly_production():
@@ -234,28 +329,66 @@ async def weekly_production():
     if log:
         await log.send(msg)
 
-@bot.tree.command(name="production")
+@bot.tree.command(name="production", description="Apply weekly production")
 
 async def production(interaction: discord.Interaction):
 
     if not has_role(interaction.user, config.TRADE_TEAM_ROLE):
 
         await interaction.response.send_message(
-            "Trade team only.",
+            "Trade Team only.",
             ephemeral=True
         )
         return
 
+    msg = "**Confirm Production Cycle**\n\n"
+
     for region, resources in config.PRODUCTION.items():
 
         for resource, amount in resources.items():
+            msg += f"{region}: +{amount} {resource}\n"
 
-            database.change_resource(region, resource, amount)
+    await interaction.response.send_message(
+        msg,
+        view=ProductionConfirm(),
+        ephemeral=True
+    )
+# -------------------
+# WEEKLY MAINTENANCE
+# -------------------
+class MaintenanceConfirm(discord.ui.View):
 
-    await interaction.response.send_message("Production applied.")
-# -------------------
-# WEEKLY PRODUCTION
-# -------------------
+    def __init__(self):
+        super().__init__(timeout=30)
+
+    @discord.ui.button(label="Confirm Maintenance", style=discord.ButtonStyle.green)
+    async def confirm(self, interaction: discord.Interaction, button: discord.ui.Button):
+
+        msg = "**Maintenance Applied**\n"
+
+        for region, resources in config.MAINTENANCE.items():
+
+            for resource, amount in resources.items():
+
+                database.change_resource(region, resource, -amount)
+                msg += f"{region}: -{amount} {resource}\n"
+
+        await interaction.response.edit_message(
+            content=msg,
+            view=None
+        )
+
+        log = await log_channel(interaction.guild)
+        if log:
+            await log.send(msg)
+
+    @discord.ui.button(label="Cancel", style=discord.ButtonStyle.red)
+    async def cancel(self, interaction: discord.Interaction, button: discord.ui.Button):
+
+        await interaction.response.edit_message(
+            content="Maintenance cancelled.",
+            view=None
+        )
 
 @tasks.loop(hours=168)
 async def weekly_maintenance():
@@ -276,34 +409,30 @@ async def weekly_maintenance():
     if log:
         await log.send(msg)
 
-@bot.tree.command(name="maintenance", description="Apply weekly maintenance costs")
+@bot.tree.command(name="maintenance", description="Apply maintenance costs")
 
 async def maintenance(interaction: discord.Interaction):
 
     if not has_role(interaction.user, config.TRADE_TEAM_ROLE):
 
         await interaction.response.send_message(
-            "Trade team only.",
+            "Trade Team only.",
             ephemeral=True
         )
         return
 
-    log = await log_channel(interaction.guild)
-
-    msg = "**Maintenance Applied**\n"
+    msg = "**Confirm Maintenance Cycle**\n\n"
 
     for region, resources in config.MAINTENANCE.items():
 
         for resource, amount in resources.items():
-
-            database.change_resource(region, resource, -amount)
-
             msg += f"{region}: -{amount} {resource}\n"
 
-    await interaction.response.send_message("Maintenance applied.")
-
-    if log:
-        await log.send(msg)
+    await interaction.response.send_message(
+        msg,
+        view=MaintenanceConfirm(),
+        ephemeral=True
+    )
 # -------------------------------
 # Run
 # -------------------------------

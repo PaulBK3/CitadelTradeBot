@@ -1,5 +1,5 @@
 TRADE_CHARTA_ROLE = "Trade Charta"
-TRADE_TEAM_ROLE = "Trade Team"
+TRADE_TEAM_ROLE = "Travel Team"
 
 TRADE_LOG_CHANNEL = "trade-log"
 
@@ -15,7 +15,8 @@ REGION_ROLES = [
     "Stormlands",
     "Dorne",
     "Iron Islands",
-    "Crownlands"
+    "Crownlands",
+    "Essos"
 ]
 
 # Weekly production per region

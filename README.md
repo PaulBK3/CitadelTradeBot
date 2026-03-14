@@ -16,12 +16,15 @@ The bot manages **regional stockpiles, trade between regions, weekly production,
 
 ### Slash Commands
 
-* `/stockpile` — View a region's stockpile
+* `/stockpile` — View the stockpile of your own region (Trade Charta only)
+* `/stockpile_region` — View the stockpile of any region (Trade Team only)
 * `/trade` — Send resources to another region
 * `/modstock` — Modify stockpiles (trade team only)
 * `/production` — Apply weekly production
 * `/maintenance` — Apply weekly maintenance costs
 
+Most command responses are ephemeral (only visible to the user).
+Trades and economy changes are logged in the configured trade log channel.
 ### Trade System
 
 * Trade confirmation buttons

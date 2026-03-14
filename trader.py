@@ -54,10 +54,11 @@ async def log_channel(guild):
 # Ready
 # -------------------
 
+async def setup_hook():
+    await bot.tree.sync()
+
 @bot.event
 async def on_ready():
-
-    await bot.tree.sync()
 
     #weekly_production.start()
     #weekly_maintenance.start()
@@ -71,10 +72,11 @@ async def on_ready():
 #for player
 @bot.tree.command(name="stockpile", description="View your region's stockpile")
 async def stockpile(interaction: discord.Interaction):
+    await interaction.response.defer(ephemeral=True)
 
     if not has_role(interaction.user, config.TRADE_CHARTER_ROLE):
 
-        await interaction.response.send_message(
+        await interaction.followup.send(
             "You need the Trade Charter role.",
             ephemeral=True
         )
@@ -84,7 +86,7 @@ async def stockpile(interaction: discord.Interaction):
 
     if not region:
 
-        await interaction.response.send_message(
+        await interaction.followup.send(
             "No valid region role found.",
             ephemeral=True
         )
@@ -97,7 +99,7 @@ async def stockpile(interaction: discord.Interaction):
     for resource, amount in data.items():
         msg += f"{resource}: {amount}\n"
 
-    await interaction.response.send_message(msg, ephemeral=True)
+    await interaction.followup.send(msg, ephemeral=True)
 
 #for staff
 
@@ -111,9 +113,11 @@ async def stockpile(interaction: discord.Interaction):
 
 async def stockpile_region(interaction: discord.Interaction, region: str):
 
+    await interaction.response.defer(ephemeral=True)
+
     if not has_role(interaction.user, config.TRADE_TEAM_ROLE):
 
-        await interaction.response.send_message(
+        await interaction.followup.send(
             "Trade Team only.",
             ephemeral=True
         )
@@ -121,7 +125,7 @@ async def stockpile_region(interaction: discord.Interaction, region: str):
 
     if region not in config.REGION_ROLES:
 
-        await interaction.response.send_message(
+        await interaction.followup.send(
             "Invalid region.",
             ephemeral=True
         )
@@ -134,7 +138,7 @@ async def stockpile_region(interaction: discord.Interaction, region: str):
     for resource, amount in data.items():
         msg += f"{resource}: {amount}\n"
 
-    await interaction.response.send_message(msg, ephemeral=True)
+    await interaction.followup.send(msg, ephemeral=True)
 
 # -------------------
 # TRADE CONFIRMATION
@@ -273,20 +277,22 @@ async def modstock(
     resource:str,
     amount:int):
 
+    await interaction.response.defer(ephemeral=True)
+
     if not has_role(interaction.user,config.TRADE_TEAM_ROLE):
 
-        await interaction.response.send_message(
+        await interaction.followup.send(
             "Trade Team only.",
             ephemeral=True
         )
 
         return
-
+    print("MODSTOCK CALLED", region, resource, amount)
     database.change_resource(region,resource,amount)
 
     msg = f"{region} {resource} {'+' if amount>=0 else ''}{amount}"
 
-    await interaction.response.send_message(msg, ephemeral=True)
+    await interaction.followup.send(msg, ephemeral=True)
 
     log = await log_channel(interaction.guild)
     await log.send(f"Modified: {msg}")

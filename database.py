@@ -41,8 +41,8 @@ def change_resource(region, resource, amount):
     INSERT INTO stockpiles(region,resource,amount)
     VALUES(?,?,?)
     ON CONFLICT(region,resource)
-    DO UPDATE SET amount = amount + ?
-    """,(region,resource,amount,amount))
+    DO UPDATE SET amount = stockpiles.amount + excluded.amount
+    """,(region,resource,amount))
 
     conn.commit()
 

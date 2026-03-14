@@ -240,6 +240,14 @@ async def trade(
     
     current = database.get_amount(sender, resource)
 
+    if amount <= 0:
+
+        await interaction.response.send_message(
+            "Don't try to steal!",
+            ephemeral=True
+        )
+        return
+    
     if current < amount:
 
         await interaction.response.send_message(

@@ -50,7 +50,17 @@ async def region_autocomplete(
         for r in config.REGION_ROLES
         if current.lower() in r.lower()
     ]
-    
+
+async def resource_autocomplete(
+    interaction: discord.Interaction,
+    current: str
+):
+
+    return [
+        app_commands.Choice(name=r, value=r)
+        for r in config.RESOURCES
+        if current.lower() in r.lower()
+    ]
 # -------------------
 # Ready
 # -------------------
@@ -76,7 +86,7 @@ async def stockpile(interaction: discord.Interaction):
     if not has_role(interaction.user, config.TRADE_CHARTER_ROLE):
 
         await interaction.response.send_message(
-            "You need the Trade Charta role.",
+            "You need the Trade Charter role.",
             ephemeral=True
         )
         return
@@ -162,7 +172,6 @@ class TradeConfirm(discord.ui.View):
         )
 
         msg = (
-            f"Trade #{trade_id}\n"
             f"{self.sender} ➜ {self.receiver}\n"
             f"{self.amount} {self.resource}"
         )
@@ -170,7 +179,7 @@ class TradeConfirm(discord.ui.View):
         await interaction.response.edit_message(content=msg,view=None)
 
         log = await log_channel(interaction.guild)
-        await log.send(msg)
+        await log.send(f"Trade #{trade_id}\n" + msg)
 
     @discord.ui.button(label="Cancel", style=discord.ButtonStyle.red)
 
@@ -185,23 +194,27 @@ class TradeConfirm(discord.ui.View):
 # TRADE COMMAND
 # -------------------
 
-@bot.tree.command(name="trade")
+@bot.tree.command(name="trade", description="Send resources to another region")
 
 @app_commands.describe(
     receiver="Region receiving goods",
     resource="Resource type",
-    amount="Amount"
+    amount="Amount to send"
 )
 
-async def trade(interaction:discord.Interaction,receiver:str,resource:str,amount:int):
+async def trade(
+    interaction: discord.Interaction,
+    receiver: str,
+    resource: str,
+    amount: int
+):
 
-    if not has_role(interaction.user,config.TRADE_CHARTER_ROLE):
+    if not has_role(interaction.user, config.TRADE_CHARTER_ROLE):
 
         await interaction.response.send_message(
-            "You lack Trade Charta.",
+            "You lack Trade CHARTER.",
             ephemeral=True
         )
-
         return
 
     sender = get_region(interaction.user)
@@ -209,22 +222,20 @@ async def trade(interaction:discord.Interaction,receiver:str,resource:str,amount
     if not sender:
 
         await interaction.response.send_message(
-            "No region role found.",
+            "No valid region role found.",
             ephemeral=True
         )
-
         return
 
-    current = database.get_amount(sender,resource)
-
-    if receiver not in config.REGION_ROLES:
+    if receiver == sender:
 
         await interaction.response.send_message(
-            "Invalid region.",
+            "Cannot trade with your own region.",
             ephemeral=True
         )
-
         return
+    
+    current = database.get_amount(sender, resource)
 
     if current < amount:
 
@@ -232,10 +243,9 @@ async def trade(interaction:discord.Interaction,receiver:str,resource:str,amount
             f"{sender} only has {current} {resource}",
             ephemeral=True
         )
-
         return
 
-    view = TradeConfirm(sender,receiver,resource,amount)
+    view = TradeConfirm(sender, receiver, resource, amount)
 
     msg = (
         f"Confirm Trade\n\n"
@@ -245,8 +255,19 @@ async def trade(interaction:discord.Interaction,receiver:str,resource:str,amount
         f"Amount: {amount}"
     )
 
-    await interaction.response.send_message(msg,view=view)
+    await interaction.response.send_message(
+        msg,
+        view=view,
+        ephemeral=True
+    )
 
+@trade.autocomplete("receiver")
+async def trade_region_autocomplete(interaction, current):
+    return await region_autocomplete(interaction, current)
+
+@trade.autocomplete("resource")
+async def stockpile_resource_autocomplete(interaction, current):
+    return await resource_autocomplete(interaction, current)
 # -------------------
 # MODIFY STOCKPILE
 # -------------------
@@ -292,6 +313,7 @@ class ProductionConfirm(discord.ui.View):
 
                 database.change_resource(region, resource, amount)
                 msg += f"{region}: +{amount} {resource}\n"
+            msg += "\n"
 
         await interaction.response.edit_message(
             content=msg,
@@ -372,6 +394,7 @@ class MaintenanceConfirm(discord.ui.View):
 
                 database.change_resource(region, resource, -amount)
                 msg += f"{region}: -{amount} {resource}\n"
+            msg += "\n"
 
         await interaction.response.edit_message(
             content=msg,

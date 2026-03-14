@@ -292,8 +292,15 @@ async def modstock(interaction:discord.Interaction,region:str,resource:str,amoun
     await interaction.response.send_message(msg, ephemeral=True)
 
     log = await log_channel(interaction.guild)
-    await log.send(f"MOD: {msg}")
+    await log.send(f"Modified: {msg}")
 
+@modstock.autocomplete("Region")
+async def modstock_region_autocomplete(interaction, current):
+    return await region_autocomplete(interaction, current)
+
+@modstock.autocomplete("Resource")
+async def modstock_resource_autocomplete(interaction, current):
+    return await resource_autocomplete(interaction, current)
 # -------------------
 # WEEKLY PRODUCTION
 # -------------------

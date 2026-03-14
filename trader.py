@@ -99,6 +99,8 @@ async def stockpile(interaction: discord.Interaction):
     for resource, amount in data.items():
         msg += f"{resource}: {amount}\n"
 
+    print("STOCKPILE CALLED", region)
+    
     await interaction.followup.send(msg, ephemeral=True)
 
 #for staff
@@ -137,6 +139,8 @@ async def stockpile_region(interaction: discord.Interaction, region: str):
 
     for resource, amount in data.items():
         msg += f"{resource}: {amount}\n"
+    
+    print("STOCKPILE_REGION CALLED", region)
 
     await interaction.followup.send(msg, ephemeral=True)
 
@@ -171,7 +175,7 @@ class TradeConfirm(discord.ui.View):
         )
 
         await interaction.response.edit_message(content=msg,view=None)
-
+        print("Trade confirmed:", self.sender, self.receiver, self.resource, self.amount)
         log = await log_channel(interaction.guild)
         await log.send(f"Trade #{trade_id}\n" + msg)
 

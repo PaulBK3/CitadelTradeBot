@@ -40,7 +40,10 @@ def get_region(member):
 
     if len(regions) == 1:
         return regions[0]
-
+    #handle dragonstaone/crownlands dual role
+    if len(regions)== 2:
+        if "Dragonstone" in regions:
+            return regions[0] if regions[1] == "Crownlands" else regions[1]
     return None
 
 
@@ -143,6 +146,93 @@ async def stockpile_region(interaction: discord.Interaction, region: str):
     print("STOCKPILE_REGION CALLED", region)
 
     await interaction.followup.send(msg, ephemeral=True)
+
+# -------------------
+# TRANSFER STOCKPILE CONFIRMATION
+# -------------------
+
+class TransferConfirm(discord.ui.View):
+
+    def __init__(self, sender, receiver):
+        super().__init__(timeout=30)
+
+        self.sender = sender
+        self.receiver = receiver
+
+    @discord.ui.button(label="Confirm Transfer", style=discord.ButtonStyle.green)
+    async def confirm(self, interaction: discord.Interaction, button: discord.ui.Button):
+
+        database.transfer_stockpile(self.sender, self.receiver)
+
+        msg = (
+            f"{self.sender} ➜ {self.receiver}\n"
+        )
+
+        await interaction.response.edit_message(content=msg, view=None)
+
+        log = await log_channel(interaction.guild)
+        if log:
+            await log.send("Stockpile Transfer\n" + msg + "\n=======================\n")
+
+    @discord.ui.button(label="Cancel", style=discord.ButtonStyle.red)
+    async def cancel(self, interaction: discord.Interaction, button: discord.ui.Button):
+
+        await interaction.response.edit_message(
+            content="Transfer cancelled.",
+            view=None
+        )
+
+# -------------------
+# TRANSFER STOCKPILE
+# -------------------
+
+@bot.tree.command(name="transfer_resource", description="Transfer all resources to regions")
+
+@app_commands.describe(
+    sender="Region sending resources",
+    receiver="Region receiving resources",
+)
+
+@app_commands.choices(
+    sender=REGION_CHOICES,
+    receiver=REGION_CHOICES,
+)
+
+async def transfer_resource(
+    interaction: discord.Interaction,
+    sender: str,
+    receiver: str,
+):
+
+    if not has_role(interaction.user, config.TRADE_TEAM_ROLE):
+
+        await interaction.response.send_message(
+            "Trade Team only.",
+            ephemeral=True
+        )
+        return
+
+    if sender == receiver:
+
+        await interaction.response.send_message(
+            "Cannot transfer to the same region.",
+            ephemeral=True
+        )
+        return
+
+    view = TransferConfirm(sender, receiver)
+
+    msg = (
+        f"Confirm Transfer\n\n"
+        f"Sender: {sender}\n"
+        f"Receiver: {receiver}\n"
+    )
+
+    await interaction.response.send_message(
+        msg,
+        view=view,
+        ephemeral=True
+    )
 
 # -------------------
 # TRADE CONFIRMATION

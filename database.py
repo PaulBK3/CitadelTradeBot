@@ -57,6 +57,24 @@ def get_amount(region,resource):
 
     return result[0] if result else 0
 
+def transfer_stockpile(sender, receiver):
+
+    cursor.execute(
+        "SELECT resource, amount FROM stockpiles WHERE region=?",
+        (sender,)
+    )
+
+    rows = cursor.fetchall()
+
+    for resource, amount in rows:
+
+        # remove from sender
+        change_resource(sender, resource, -amount)
+
+        # add to receiver
+        change_resource(receiver, resource, amount)
+
+    conn.commit()
 
 def log_trade(sender,receiver,resource,amount):
 

@@ -190,18 +190,18 @@ class TransferConfirm(discord.ui.View):
 
 @app_commands.describe(
     sender="Region sending resources",
-    receiver="Region receiving resources",
+    receiver="Region receiving resources"
 )
 
 @app_commands.choices(
     sender=REGION_CHOICES,
-    receiver=REGION_CHOICES,
+    receiver=REGION_CHOICES
 )
 
 async def transfer_resources(
     interaction: discord.Interaction,
     sender: str,
-    receiver: str,
+    receiver: str
 ):
 
     if not has_role(interaction.user, config.TRADE_TEAM_ROLE):

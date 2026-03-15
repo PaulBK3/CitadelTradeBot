@@ -25,6 +25,9 @@ RESOURCE_CHOICES = [
     for r in config.RESOURCES
 ]
 
+staff = app_commands.Group(name="staff", description="Trade team commands")
+bot.tree.add_command(staff)
+
 # -------------------
 # Helpers
 # -------------------
@@ -57,8 +60,15 @@ async def log_channel(guild):
 # Ready
 # -------------------
 
+@bot.event
 async def setup_hook():
-    await bot.tree.sync()
+
+    guild = discord.Object(id=config.GUILD_ID)
+
+    bot.tree.copy_global_to(guild=guild)
+    synced = await bot.tree.sync(guild=guild)
+
+    print(f"Synced {len(synced)} commands to dev guild.")
 
 @bot.event
 async def on_ready():
@@ -108,7 +118,7 @@ async def stockpile(interaction: discord.Interaction):
 
 #for staff
 
-@bot.tree.command(name="stockpile_region", description="View a specific region's stockpile")
+@staff.command(name="stockpile_region", description="View a specific region's stockpile")
 
 @app_commands.describe(region="Region to inspect")
 
@@ -186,7 +196,7 @@ class TransferConfirm(discord.ui.View):
 # TRANSFER STOCKPILE
 # -------------------
 
-@bot.tree.command(name="transfer_resources", description="Transfer all resources to another region")
+@staff.command(name="transfer_resources", description="Transfer all resources to another region")
 
 @app_commands.describe(
     sender="Region sending resources",
@@ -366,7 +376,7 @@ async def trade(
 # MODIFY STOCKPILE
 # -------------------
 
-@bot.tree.command(name="modify_stockpile", description="Modify a region's stockpile")
+@staff.command(name="modify_stockpile", description="Modify a region's stockpile")
 
 @app_commands.choices(
     region=REGION_CHOICES,
@@ -456,7 +466,7 @@ async def weekly_production():
     if log:
         await log.send(msg+ "\n=======================\n")
 
-@bot.tree.command(name="production", description="Apply weekly production")
+@staff.command(name="production", description="Apply weekly production")
 
 async def production(interaction: discord.Interaction):
 
@@ -537,7 +547,7 @@ async def weekly_maintenance():
     if log:
         await log.send(msg + "\n=======================\n")
 
-@bot.tree.command(name="maintenance", description="Apply maintenance costs")
+@staff.command(name="maintenance", description="Apply maintenance costs")
 
 async def maintenance(interaction: discord.Interaction):
 

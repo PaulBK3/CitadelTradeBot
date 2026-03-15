@@ -186,7 +186,7 @@ class TransferConfirm(discord.ui.View):
 # TRANSFER STOCKPILE
 # -------------------
 
-@bot.tree.command(name="transfer_resource", description="Transfer all resources to regions")
+@bot.tree.command(name="transfer_resources", description="Transfer all resources to another region")
 
 @app_commands.describe(
     sender="Region sending resources",
@@ -198,7 +198,7 @@ class TransferConfirm(discord.ui.View):
     receiver=REGION_CHOICES,
 )
 
-async def transfer_resource(
+async def transfer_resources(
     interaction: discord.Interaction,
     sender: str,
     receiver: str,
@@ -366,14 +366,14 @@ async def trade(
 # MODIFY STOCKPILE
 # -------------------
 
-@bot.tree.command(name="modstock")
+@bot.tree.command(name="modify_stockpile", description="Modify a region's stockpile")
 
 @app_commands.choices(
     region=REGION_CHOICES,
     resource=RESOURCE_CHOICES
 )
 
-async def modstock(
+async def modify_stockpile(
     interaction:discord.Interaction,
     region:str,
     resource:str,

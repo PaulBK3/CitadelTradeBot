@@ -65,11 +65,13 @@ async def setup_hook():
 
     guild = discord.Object(id=config.GUILD_ID)
 
+    bot.tree.clear_commands(guild=guild)  # clears cached commands
+
     bot.tree.copy_global_to(guild=guild)
     synced = await bot.tree.sync(guild=guild)
 
     print(f"Synced {len(synced)} commands to dev guild.")
-
+    
 @bot.event
 async def on_ready():
 

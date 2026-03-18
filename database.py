@@ -26,6 +26,15 @@ def setup():
     )
     """)
 
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS buffs (
+        region TEXT,
+        buff_type TEXT,
+        tier TEXT,
+        PRIMARY KEY(region, buff_type)
+    )
+    """)
+
     conn.commit()
 
 def get_stockpile(region):
@@ -86,3 +95,22 @@ def log_trade(sender,receiver,resource,amount):
     conn.commit()
 
     return cursor.lastrowid
+
+def get_buff(region, buff_type):
+
+    cursor.execute("SELECT tier FROM buffs WHERE region=? AND buff_type=?", (region, buff_type))
+
+    result = cursor.fetchone()
+
+    return result[0] if result else None
+
+def set_buff(region, buff_type, tier):
+
+    cursor.execute("""
+    INSERT INTO buffs(region, buff_type, tier)
+    VALUES(?,?,?)
+    ON CONFLICT(region, buff_type)
+    DO UPDATE SET tier = excluded.tier
+    """, (region, buff_type, tier))
+
+    conn.commit()

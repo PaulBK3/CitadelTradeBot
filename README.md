@@ -19,6 +19,7 @@ The bot manages **regional stockpiles, trade between regions, weekly production,
 * `/stockpile` — View the stockpile of your own region (Trade Charta only)
 * `/stockpile_region` — View the stockpile of any region (Trade Team only)
 * `/trade` — Send resources to another region
+* `/buy_buff` — Purchase buffs for regions (Trade Team only)
 * `/modstock` — Modify stockpiles (trade team only)
 * `/production` — Apply weekly production
 * `/maintenance` — Apply weekly maintenance costs
@@ -31,6 +32,13 @@ Trades and economy changes are logged in the configured trade log channel.
 * Automatic resource validation
 * Trade IDs for logging
 * Logged transactions in a trade log channel
+
+### Buff System
+
+* Purchase buff tiers for regions using resources
+* Buffs provide in-game advantages (tracked in database)
+* Confirmation required for purchases
+* Logged in trade log channel
 
 ### Automated Economy
 

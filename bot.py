@@ -25,6 +25,11 @@ RESOURCE_CHOICES = [
     for r in config.RESOURCES
 ]
 
+BUFF_TYPE_CHOICES = [
+    app_commands.Choice(name=buff_type.replace('_', ' ').title(), value=buff_type)
+    for buff_type in config.BUFFS.keys()
+]
+
 staff = app_commands.Group(name="staff", description="Trade team commands")
 bot.tree.add_command(staff)
 
@@ -239,6 +244,109 @@ async def transfer_resources(
         f"Sender: {sender}\n"
         f"Receiver: {receiver}\n"
     )
+
+    await interaction.response.send_message(
+        msg,
+        view=view,
+        ephemeral=True
+    )
+
+# -------------------
+# BUY BUFF CONFIRMATION
+# -------------------
+
+class BuyBuffConfirm(discord.ui.View):
+
+    def __init__(self, region, buff_type, tier, cost):
+        super().__init__(timeout=30)
+
+        self.region = region
+        self.buff_type = buff_type
+        self.tier = tier
+        self.cost = cost
+
+    @discord.ui.button(label="Confirm Purchase", style=discord.ButtonStyle.green)
+    async def confirm(self, interaction: discord.Interaction, button: discord.ui.Button):
+
+        for resource, amount in self.cost.items():
+            database.change_resource(self.region, resource, -amount)
+
+        database.set_buff(self.region, self.buff_type, self.tier)
+
+        msg = f"Buff Purchased: {self.region} - {config.BUFFS[self.buff_type]['name']} ({self.tier})"
+
+        await interaction.response.edit_message(content=msg, view=None)
+
+        log = await log_channel(interaction.guild)
+        if log:
+            await log.send("```diff\n+" + msg + "```\n=======================\n")
+
+    @discord.ui.button(label="Cancel", style=discord.ButtonStyle.red)
+    async def cancel(self, interaction: discord.Interaction, button: discord.ui.Button):
+
+        await interaction.response.edit_message(
+            content="Purchase cancelled.",
+            view=None
+        )
+
+
+# -------------------
+# BUY BUFF COMMAND
+# -------------------
+
+@bot.tree.command(name="buy_buff", description="Purchase a buff tier for a region")
+
+@app_commands.describe(
+    buff_type="Type of buff",
+    tier="Tier to purchase"
+)
+
+@app_commands.choices(
+    buff_type=BUFF_TYPE_CHOICES,
+    tier=[
+        app_commands.Choice(name="Tier 1", value=1),
+        app_commands.Choice(name="Tier 2", value=2),
+        app_commands.Choice(name="Tier 3", value=3),
+    ]
+)
+
+async def buy_buff(interaction: discord.Interaction, buff_type: str, tier: int):
+
+    if not has_role(interaction.user, config.TRADE_CHARTER_ROLE):
+
+        await interaction.response.send_message(
+            "Charter only",
+            ephemeral=True
+        )
+        return
+
+    buff_data = config.BUFFS[buff_type]
+
+    region = get_region(interaction.user)
+    
+    tier_name = list(buff_data["tiers"].keys())[tier - 1]
+
+    cost = buff_data["tiers"][tier_name]["cost"]
+
+    # check resources
+    insufficient = []
+    for resource, amount in cost.items():
+        current = database.get_amount(region, resource)
+        if current < amount:
+            insufficient.append(f"{resource}: {current}/{amount}")
+
+    if insufficient:
+        msg = f"Insufficient resources:\n" + "\n".join(insufficient)
+        await interaction.response.send_message(msg, ephemeral=True)
+        return
+    
+    
+    # confirmation
+    view = BuyBuffConfirm(region, buff_type, tier, cost)
+
+    msg = f"Confirm Buff Purchase\n\nRegion: {region}\nBuff: {buff_data['name']}\nTier: {tier}\nCost:\n"
+    for resource, amount in cost.items():
+        msg += f"{amount} {resource}\n"
 
     await interaction.response.send_message(
         msg,

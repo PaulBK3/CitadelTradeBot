@@ -252,13 +252,14 @@ async def transfer_resources(
 
 class TradeConfirm(discord.ui.View):
 
-    def __init__(self,sender,receiver,resource,amount):
+    def __init__(self,sender,receiver,resource,amount,RP):
         super().__init__(timeout=30)
 
         self.sender = sender
         self.receiver = receiver
         self.resource = resource
         self.amount = amount
+        self.RP = RP
 
     @discord.ui.button(label="Confirm Trade", style=discord.ButtonStyle.green)
 
@@ -273,7 +274,8 @@ class TradeConfirm(discord.ui.View):
 
         msg = (
             f"{self.sender} ➜ {self.receiver}\n"
-            f"{self.amount} {self.resource}"
+            f"{self.amount} {self.resource}\n"
+            f"RP Link: {self.RP}"
         )
 
         await interaction.response.edit_message(content=msg,view=None)
@@ -299,7 +301,8 @@ class TradeConfirm(discord.ui.View):
 @app_commands.describe(
     receiver="Region receiving goods",
     resource="Resource type",
-    amount="Amount to send"
+    amount="Amount to send",
+    RP = "Rp link"
 )
 
 @app_commands.choices(
@@ -311,7 +314,8 @@ async def trade(
     interaction: discord.Interaction,
     receiver: str,
     resource: str,
-    amount: int
+    amount: int,
+    RP: str
 ):
 
     if not has_role(interaction.user, config.TRADE_CHARTER_ROLE):
@@ -358,6 +362,21 @@ async def trade(
         )
         return
 
+    #check RP link format (basic check, can be improved)
+    if RP:
+        if not RP.startswith("https://discord.com"):
+            await interaction.response.send_message(
+                "Invalid RP link format.",
+                ephemeral=True
+            )
+            return
+    else:
+        await interaction.response.send_message(
+            "No RP link provided. Please include a link to the RP post describing the trade.",
+            ephemeral=True
+        )
+        return
+    
     view = TradeConfirm(sender, receiver, resource, amount)
 
     msg = (
@@ -365,7 +384,8 @@ async def trade(
         f"Sender: {sender}\n"
         f"Receiver: {receiver}\n"
         f"Resource: {resource}\n"
-        f"Amount: {amount}"
+        f"Amount: {amount}\n"
+        f"RP Link: {RP}"
     )
 
     await interaction.response.send_message(

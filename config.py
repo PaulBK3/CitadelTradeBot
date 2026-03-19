@@ -8,8 +8,8 @@ RESOURCES = ["Food","Wood","Stone","Iron","Luxury"]
 
 # Only these roles count as regions
 REGION_ROLES = [
-    "North",
-    "Vale",
+    "The North",
+    "The Vale",
     "Riverlands",
     "Westerlands",
     "Reach",

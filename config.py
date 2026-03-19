@@ -30,7 +30,7 @@ REGION_ROLES = [
 # Weekly production per region
 PRODUCTION = {
 
-    "North": {
+    "The North": {
         "Food": 30,
         "Wood": 33,
         "Stone": 6,
@@ -38,7 +38,7 @@ PRODUCTION = {
         "Luxury": 4
     },
 
-    "Vale": {
+    "The Vale": {
         "Food": 19,
         "Wood": 12,
         "Stone": 15,
@@ -172,7 +172,7 @@ PRODUCTION = {
 # Weekly maintenance per region
 MAINTENANCE = {
 
-    "North": {
+    "The North": {
         "Food": 30,
         "Wood": 22,
         "Stone": 5,
@@ -180,7 +180,7 @@ MAINTENANCE = {
         "Luxury": 6,
     },
 
-    "Vale": {
+    "The Vale": {
         "Food": 20,
         "Wood": 14,
         "Stone": 5,

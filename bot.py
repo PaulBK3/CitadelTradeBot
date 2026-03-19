@@ -65,7 +65,13 @@ async def setup_hook():
 
     guild = discord.Object(id=config.GUILD_ID)
 
-    bot.tree.clear_commands(guild=guild)  # clears cached commands
+    # clear global commands
+    #bot.tree.clear_commands(guild=None)
+    #await bot.tree.sync()
+
+    # clear guild commands
+    bot.tree.clear_commands(guild=guild)
+
 
     bot.tree.copy_global_to(guild=guild)
     synced = await bot.tree.sync(guild=guild)
@@ -252,14 +258,14 @@ async def transfer_resources(
 
 class TradeConfirm(discord.ui.View):
 
-    def __init__(self,sender,receiver,resource,amount,RP):
+    def __init__(self,sender,receiver,resource,amount,rp_link):
         super().__init__(timeout=30)
 
         self.sender = sender
         self.receiver = receiver
         self.resource = resource
         self.amount = amount
-        self.RP = RP
+        self.rp_link = rp_link
 
     @discord.ui.button(label="Confirm Trade", style=discord.ButtonStyle.green)
 
@@ -275,7 +281,7 @@ class TradeConfirm(discord.ui.View):
         msg = (
             f"{self.sender} ➜ {self.receiver}\n"
             f"{self.amount} {self.resource}\n"
-            f"RP Link: {self.RP}"
+            f"RP Link: {self.rp_link}"
         )
 
         await interaction.response.edit_message(content=msg,view=None)
@@ -302,7 +308,7 @@ class TradeConfirm(discord.ui.View):
     receiver="Region receiving goods",
     resource="Resource type",
     amount="Amount to send",
-    RP = "Rp link"
+    rp_link = "link to RP post"
 )
 
 @app_commands.choices(
@@ -315,7 +321,7 @@ async def trade(
     receiver: str,
     resource: str,
     amount: int,
-    RP: str
+    rp_link: str
 ):
 
     if not has_role(interaction.user, config.TRADE_CHARTER_ROLE):
@@ -363,8 +369,8 @@ async def trade(
         return
 
     #check RP link format (basic check, can be improved)
-    if RP:
-        if not RP.startswith("https://discord.com"):
+    if rp_link not  in ["", None]:
+        if not rp_link.startswith("https://discord.com"):
             await interaction.response.send_message(
                 "Invalid RP link format.",
                 ephemeral=True
@@ -377,7 +383,7 @@ async def trade(
         )
         return
     
-    view = TradeConfirm(sender, receiver, resource, amount)
+    view = TradeConfirm(sender, receiver, resource, amount, rp_link)
 
     msg = (
         f"Confirm Trade\n\n"
@@ -385,7 +391,7 @@ async def trade(
         f"Receiver: {receiver}\n"
         f"Resource: {resource}\n"
         f"Amount: {amount}\n"
-        f"RP Link: {RP}"
+        f"RP Link: {rp_link}"
     )
 
     await interaction.response.send_message(

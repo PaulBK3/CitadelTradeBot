@@ -603,6 +603,33 @@ async def production(interaction: discord.Interaction):
 # -------------------
 # WEEKLY MAINTENANCE
 # -------------------
+
+def calculate_debuffs(region):
+
+    debuffs = {}
+
+    for resource, data in config.DEBUFFS.items():
+
+        amount = database.get_amount(region, resource.capitalize())
+
+        # simple thresholds (you can tweak later)
+        if amount < -6:
+            tier = 3
+        elif amount < -3:
+            tier = 2
+        elif amount < 0:
+            tier = 1
+        else:
+            tier = 0
+
+        if tier > 0:
+            debuffs[resource] = {
+                "tier": tier,
+                "name": data["tiers"][tier]["name"]
+            }
+
+    return debuffs
+
 class MaintenanceConfirm(discord.ui.View):
 
     def __init__(self):
@@ -626,6 +653,15 @@ class MaintenanceConfirm(discord.ui.View):
             view=None
         )
 
+        for region in config.MAINTENANCE.keys():
+
+            debuffs = calculate_debuffs(region)
+
+            if debuffs:
+                msg_debuff += f"\n⚠ {region} Debuffs:\n"
+                for d in debuffs.values():
+                    msg_debuff += f"- {d['name']} (Tier {d['tier']})\n"
+        await log.send(msg_debuff)
         log = await log_channel(interaction.guild)
         if log:
             await log.send(msg+ "\n=======================\n")

@@ -114,11 +114,21 @@ async def stockpile(interaction: discord.Interaction):
         return
 
     data = database.get_stockpile(region)
+    maintenance = config.MAINTENANCE.get(region, {})
 
     msg = f"**{region} Stockpile**\n"
+    msg += "```"
+
+    msg += f"{'Resource':<8}{'Current':>8}{'Maint':>8}{'Remain':>8}\n"
+    msg += "-" * 40 + "\n"
 
     for resource, amount in data.items():
-        msg += f"{resource}: {amount}\n"
+        maint = maintenance.get(resource, 0)
+        remaining = amount - maint
+
+        msg += f"{resource:<8}{amount:>8}{maint:>8}{remaining:>8}\n"
+
+    msg += "```"
 
     print("STOCKPILE CALLED", region)
 

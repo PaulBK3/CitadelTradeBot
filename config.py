@@ -466,7 +466,7 @@ BUFFS = {
 # -------------------
 
 DEBUFFS = {
-    "food": {
+    "Food": {
         "name": "Food Deficit",
         "tiers": {
             1: {"name": "Minor Food Shortage"},
@@ -475,7 +475,7 @@ DEBUFFS = {
         }
     },
 
-    "wood": {
+    "Wood": {
         "name": "Wood Deficit",
         "tiers": {
             1: {"name": "Timber Scarcity"},
@@ -484,7 +484,7 @@ DEBUFFS = {
         }
     },
 
-    "stone": {
+    "Stone": {
         "name": "Stone Deficit",
         "tiers": {
             1: {"name": "Cracked Walls"},
@@ -493,7 +493,7 @@ DEBUFFS = {
         }
     },
 
-    "luxury": {
+    "Luxury": {
         "name": "Luxury Deficit",
         "tiers": {
             1: {"name": "Fading Splendor"},
@@ -502,7 +502,7 @@ DEBUFFS = {
         }
     },
 
-    "iron": {
+    "Iron": {
         "name": "Iron Deficit",
         "tiers": {
             1: {"name": "Scarcity of Steel"},

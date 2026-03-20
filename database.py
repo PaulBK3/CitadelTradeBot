@@ -114,3 +114,12 @@ def set_buff(region, buff_type, tier):
     """, (region, buff_type, tier))
 
     conn.commit()
+
+def set_amount(region, resource, amount):
+    cursor.execute("""
+    INSERT INTO stockpiles(region, resource, amount)
+    VALUES(?, ?, ?)
+    ON CONFLICT(region, resource)
+    DO UPDATE SET amount = excluded.amount
+    """, (region, resource, amount))
+    conn.commit()

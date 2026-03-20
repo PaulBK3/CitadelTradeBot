@@ -295,7 +295,7 @@ class BuyBuffConfirm(discord.ui.View):
 
         log = await log_channel(interaction.guild)
         if log:
-            await log.send("```diff\n+" + msg + "```\n=======================\n")
+            await log.send("```diff\n+" + msg + "```\n")
 
     @discord.ui.button(label="Cancel", style=discord.ButtonStyle.red)
     async def cancel(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -646,7 +646,7 @@ def calculate_debuffs(region):
 
     for resource, data in config.DEBUFFS.items():
 
-        amount = database.get_amount(region, resource.capitalize())
+        amount = database.get_amount(region, resource)
 
         # simple thresholds (you can tweak later)
         if amount < -6:
@@ -663,7 +663,8 @@ def calculate_debuffs(region):
                 "tier": tier,
                 "name": data["tiers"][tier]["name"]
             }
-
+        if amount < 0:
+            database.set_amount(region, resource, 0)
     return debuffs
 
 class MaintenanceConfirm(discord.ui.View):
@@ -689,18 +690,22 @@ class MaintenanceConfirm(discord.ui.View):
             view=None
         )
 
-        for region in config.MAINTENANCE.keys():
-
-            debuffs = calculate_debuffs(region)
-
-            if debuffs:
-                msg_debuff += f"\n⚠ {region} Debuffs:\n"
-                for d in debuffs.values():
-                    msg_debuff += f"- {d['name']} (Tier {d['tier']})\n"
-        await log.send(msg_debuff)
         log = await log_channel(interaction.guild)
         if log:
             await log.send(msg+ "\n=======================\n")
+
+        # send debuffs as separate messages
+        for region in config.MAINTENANCE.keys():
+            debuffs = calculate_debuffs(region)
+
+            if not debuffs:
+                continue
+
+            msg_debuff = f"⚠ **{region} Debuffs**\n"
+            for d in debuffs.values():
+                msg_debuff += f"```diff\n- {d['name']} (Tier {d['tier']})```\n"
+
+            await log.send(msg_debuff)
 
     @discord.ui.button(label="Cancel", style=discord.ButtonStyle.red)
     async def cancel(self, interaction: discord.Interaction, button: discord.ui.Button):

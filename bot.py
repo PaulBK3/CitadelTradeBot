@@ -70,7 +70,13 @@ async def setup_hook():
 
     guild = discord.Object(id=config.GUILD_ID)
 
-    bot.tree.clear_commands(guild=guild)  # clears cached commands
+    # clear global commands
+    #bot.tree.clear_commands(guild=None)
+    #await bot.tree.sync()
+
+    # clear guild commands
+    bot.tree.clear_commands(guild=guild)
+
 
     bot.tree.copy_global_to(guild=guild)
     synced = await bot.tree.sync(guild=guild)
@@ -113,11 +119,21 @@ async def stockpile(interaction: discord.Interaction):
         return
 
     data = database.get_stockpile(region)
+    maintenance = config.MAINTENANCE.get(region, {})
 
     msg = f"**{region} Stockpile**\n"
+    msg += "```"
+
+    msg += f"{'Resource':<8}{'Current':>8}{'Maint':>8}{'Remain':>8}\n"
+    msg += "-" * 40 + "\n"
 
     for resource, amount in data.items():
-        msg += f"{resource}: {amount}\n"
+        maint = maintenance.get(resource, 0)
+        remaining = amount - maint
+
+        msg += f"{resource:<8}{amount:>8}{maint:>8}{remaining:>8}\n"
+
+    msg += "```"
 
     print("STOCKPILE CALLED", region)
 
@@ -360,13 +376,14 @@ async def buy_buff(interaction: discord.Interaction, buff_type: str, tier: int):
 
 class TradeConfirm(discord.ui.View):
 
-    def __init__(self,sender,receiver,resource,amount):
+    def __init__(self,sender,receiver,resource,amount,rp_link):
         super().__init__(timeout=30)
 
         self.sender = sender
         self.receiver = receiver
         self.resource = resource
         self.amount = amount
+        self.rp_link = rp_link
 
     @discord.ui.button(label="Confirm Trade", style=discord.ButtonStyle.green)
 
@@ -381,7 +398,8 @@ class TradeConfirm(discord.ui.View):
 
         msg = (
             f"{self.sender} ➜ {self.receiver}\n"
-            f"{self.amount} {self.resource}"
+            f"{self.amount} {self.resource}\n"
+            f"RP Link: {self.rp_link}"
         )
 
         await interaction.response.edit_message(content=msg,view=None)
@@ -407,7 +425,8 @@ class TradeConfirm(discord.ui.View):
 @app_commands.describe(
     receiver="Region receiving goods",
     resource="Resource type",
-    amount="Amount to send"
+    amount="Amount to send",
+    rp_link = "link to RP post"
 )
 
 @app_commands.choices(
@@ -419,7 +438,8 @@ async def trade(
     interaction: discord.Interaction,
     receiver: str,
     resource: str,
-    amount: int
+    amount: int,
+    rp_link: str
 ):
 
     if not has_role(interaction.user, config.TRADE_CHARTER_ROLE):
@@ -466,14 +486,30 @@ async def trade(
         )
         return
 
-    view = TradeConfirm(sender, receiver, resource, amount)
+    #check RP link format (basic check, can be improved)
+    if rp_link not  in ["", None]:
+        if not rp_link.startswith("https://discord.com"):
+            await interaction.response.send_message(
+                "Invalid RP link format.",
+                ephemeral=True
+            )
+            return
+    else:
+        await interaction.response.send_message(
+            "No RP link provided. Please include a link to the RP post describing the trade.",
+            ephemeral=True
+        )
+        return
+    
+    view = TradeConfirm(sender, receiver, resource, amount, rp_link)
 
     msg = (
         f"Confirm Trade\n\n"
         f"Sender: {sender}\n"
         f"Receiver: {receiver}\n"
         f"Resource: {resource}\n"
-        f"Amount: {amount}"
+        f"Amount: {amount}\n"
+        f"RP Link: {rp_link}"
     )
 
     await interaction.response.send_message(

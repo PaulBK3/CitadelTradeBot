@@ -378,7 +378,7 @@ async def buy_buff(interaction: discord.Interaction, buff_type: str, tier: int):
 
 class TradeConfirm(discord.ui.View):
 
-    def __init__(self, sender, receiver, resource, amount, rp_link):
+    def __init__(self, sender, receiver, resource, amount, rp_link, comment=None):
         super().__init__(timeout=30)
 
         self.sender = sender
@@ -386,6 +386,7 @@ class TradeConfirm(discord.ui.View):
         self.resource = resource
         self.amount = amount
         self.rp_link = rp_link
+        self.comment = comment
         self.processed = False
 
     @discord.ui.button(label="Confirm Trade", style=discord.ButtonStyle.green)
@@ -421,7 +422,8 @@ class TradeConfirm(discord.ui.View):
             f"RP Link: {self.rp_link}"
         )
 
-        await interaction.edit_original_response(content=msg, view=None)
+        if self.comment:
+            msg += f"\nComment: {self.comment}"
 
         print("Trade confirmed:", self.sender, self.receiver, self.resource, self.amount)
 
@@ -454,25 +456,24 @@ class TradeConfirm(discord.ui.View):
 # -------------------
 
 @bot.tree.command(name="trade", description="Send resources to another region")
-
 @app_commands.describe(
     receiver="Region receiving goods",
     resource="Resource type",
     amount="Amount to send",
-    rp_link = "link to RP post"
+    rp_link="Link to RP post",
+    comment="Optional note about the trade"
 )
-
 @app_commands.choices(
     receiver=REGION_CHOICES,
     resource=RESOURCE_CHOICES
 )
-
 async def trade(
     interaction: discord.Interaction,
     receiver: str,
     resource: str,
     amount: int,
-    rp_link: str
+    rp_link: str,
+    comment: str | None = None
 ):
 
     if not has_role(interaction.user, config.TRADE_CHARTER_ROLE):
@@ -534,7 +535,7 @@ async def trade(
         )
         return
     
-    view = TradeConfirm(sender, receiver, resource, amount, rp_link)
+    view = TradeConfirm(sender, receiver, resource, amount, rp_link, comment)
 
     msg = (
         f"Confirm Trade\n\n"
@@ -544,6 +545,9 @@ async def trade(
         f"Amount: {amount}\n"
         f"RP Link: {rp_link}"
     )
+
+    if comment:
+        msg += f"\nComment: {comment}"
 
     await interaction.response.send_message(
         msg,

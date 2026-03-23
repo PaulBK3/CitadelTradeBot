@@ -378,7 +378,7 @@ async def buy_buff(interaction: discord.Interaction, buff_type: str, tier: int):
 
 class TradeConfirm(discord.ui.View):
 
-    def __init__(self,sender,receiver,resource,amount,rp_link):
+    def __init__(self, sender, receiver, resource, amount, rp_link):
         super().__init__(timeout=30)
 
         self.sender = sender
@@ -386,16 +386,33 @@ class TradeConfirm(discord.ui.View):
         self.resource = resource
         self.amount = amount
         self.rp_link = rp_link
+        self.processed = False
 
     @discord.ui.button(label="Confirm Trade", style=discord.ButtonStyle.green)
+    async def confirm(self, interaction: discord.Interaction, button: discord.ui.Button):
 
-    async def confirm(self,interaction:discord.Interaction,button:discord.ui.Button):
+        if self.processed:
+            await interaction.response.send_message(
+                "This trade is already being processed.",
+                ephemeral=True
+            )
+            return
 
-        database.change_resource(self.sender,self.resource,-self.amount)
-        database.change_resource(self.receiver,self.resource,self.amount)
+        self.processed = True
+
+        for child in self.children:
+            child.disabled = True
+
+        await interaction.response.edit_message(
+            content="Processing trade...",
+            view=self
+        )
+
+        database.change_resource(self.sender, self.resource, -self.amount)
+        database.change_resource(self.receiver, self.resource, self.amount)
 
         trade_id = database.log_trade(
-            self.sender,self.receiver,self.resource,self.amount
+            self.sender, self.receiver, self.resource, self.amount
         )
 
         msg = (
@@ -404,14 +421,28 @@ class TradeConfirm(discord.ui.View):
             f"RP Link: {self.rp_link}"
         )
 
-        await interaction.response.edit_message(content=msg,view=None)
+        await interaction.edit_original_response(content=msg, view=None)
+
         print("Trade confirmed:", self.sender, self.receiver, self.resource, self.amount)
+
         log = await log_channel(interaction.guild)
-        await log.send(f"Trade #{trade_id}\n" + msg + "\n=======================\n")
+        if log:
+            await log.send(f"Trade #{trade_id}\n{msg}\n=======================\n")
 
     @discord.ui.button(label="Cancel", style=discord.ButtonStyle.red)
+    async def cancel(self, interaction: discord.Interaction, button: discord.ui.Button):
 
-    async def cancel(self,interaction:discord.Interaction,button:discord.ui.Button):
+        if self.processed:
+            await interaction.response.send_message(
+                "This trade is already being processed.",
+                ephemeral=True
+            )
+            return
+
+        self.processed = True
+
+        for child in self.children:
+            child.disabled = True
 
         await interaction.response.edit_message(
             content="Trade cancelled.",

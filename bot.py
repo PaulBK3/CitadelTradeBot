@@ -446,7 +446,7 @@ class TradeConfirm(discord.ui.View):
         if log:
             await log.send(f"Trade #{trade_id}\n{msg}\n=======================\n")
 
-        await interaction.response.edit_message(
+        await interaction.edit_original_response(
             content="Trade processed.",
             view=self
         )

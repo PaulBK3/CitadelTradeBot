@@ -431,6 +431,11 @@ class TradeConfirm(discord.ui.View):
         if log:
             await log.send(f"Trade #{trade_id}\n{msg}\n=======================\n")
 
+        await interaction.response.edit_message(
+            content="Trade processed.",
+            view=self
+        )
+        
     @discord.ui.button(label="Cancel", style=discord.ButtonStyle.red)
     async def cancel(self, interaction: discord.Interaction, button: discord.ui.Button):
 

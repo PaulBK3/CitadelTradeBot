@@ -543,7 +543,7 @@ async def trade(
 
     #check RP link format (basic check, can be improved)
     if rp_link not  in ["", None]:
-        if not rp_link.startswith("https://discord.com") or rp_link.startswith("https://discordapp.com"):
+        if not rp_link.startswith("https://discord.com") or not rp_link.startswith("https://discordapp.com"):
             await interaction.response.send_message(
                 "Invalid RP link format.",
                 ephemeral=True

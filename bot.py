@@ -485,7 +485,7 @@ class TradeConfirm(discord.ui.View):
 )
 @app_commands.choices(
     receiver=REGION_CHOICES,
-    resource=RESOURCE_CHOICES.append(app_commands.Choice(name="Gold", value="Gold"))
+    resource=RESOURCE_CHOICES + [app_commands.Choice(name="Gold", value="Gold")]
 )
 async def trade(
     interaction: discord.Interaction,

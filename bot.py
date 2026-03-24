@@ -428,6 +428,7 @@ class TradeConfirm(discord.ui.View):
                     comment_text = ""
                 await save_edit.send(
                     f"{self.sender}:\n- Remove {self.amount} gold "
+                    f"{self.receiver}:\n- Add {self.amount} gold "
                     f"(Trade #{trade_id}){comment_text}"
                 )
 

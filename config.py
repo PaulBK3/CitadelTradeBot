@@ -1,7 +1,7 @@
 GUILD_ID = 1222288591707967568
 TRADE_CHARTER_ROLE = "Charter"
 TRADE_TEAM_ROLE = "Travel Team"
-
+SAVE_EDIT_CHANNEL = "✍︱save-edit-list"
 TRADE_LOG_CHANNEL = "trade-log"
 
 RESOURCES = ["Food","Wood","Stone","Iron","Luxury"]

@@ -54,13 +54,16 @@ def get_region(member):
             return regions[0] if regions[1] == "Crownlands" else regions[1]
     return None
 
-
 async def log_channel(guild):
 
     for channel in guild.text_channels:
         if channel.name == config.TRADE_LOG_CHANNEL:
             return channel
 
+async def save_edit_channel(guild):
+    for channel in guild.text_channels:
+        if channel.name == config.SAVE_EDIT_CHANNEL:
+            return channel
 # -------------------
 # Ready
 # -------------------
@@ -409,12 +412,24 @@ class TradeConfirm(discord.ui.View):
             view=self
         )
 
-        database.change_resource(self.sender, self.resource, -self.amount)
-        database.change_resource(self.receiver, self.resource, self.amount)
-
         trade_id = database.log_trade(
             self.sender, self.receiver, self.resource, self.amount
         )
+
+        if self.resource in config.RESOURCES:
+            database.change_resource(self.sender, self.resource, -self.amount)
+            database.change_resource(self.receiver, self.resource, self.amount)
+        else:
+            save_edit = await save_edit_channel(interaction.guild)
+            if save_edit:
+                if self.comment:
+                    comment_text = f"\nComment: {self.comment}"
+                else:
+                    comment_text = ""
+                await save_edit.send(
+                    f"{self.sender}:\n- Remove {self.amount} gold "
+                    f"(Trade #{trade_id}){comment_text}"
+                )
 
         msg = (
             f"{self.sender} ➜ {self.receiver}\n"
@@ -470,7 +485,7 @@ class TradeConfirm(discord.ui.View):
 )
 @app_commands.choices(
     receiver=REGION_CHOICES,
-    resource=RESOURCE_CHOICES
+    resource=RESOURCE_CHOICES.append(app_commands.Choice(name="Gold", value="Gold"))
 )
 async def trade(
     interaction: discord.Interaction,
@@ -507,8 +522,16 @@ async def trade(
         )
         return
     
-    current = database.get_amount(sender, resource)
+    if resource in config.RESOURCES:
+        current = database.get_amount(sender, resource)
+        if current < amount:
 
+            await interaction.response.send_message(
+                f"{sender} only has {current} {resource}",
+                ephemeral=True
+            )
+            return
+        
     if amount <= 0:
 
         await interaction.response.send_message(
@@ -517,13 +540,7 @@ async def trade(
         )
         return
     
-    if current < amount:
 
-        await interaction.response.send_message(
-            f"{sender} only has {current} {resource}",
-            ephemeral=True
-        )
-        return
 
     #check RP link format (basic check, can be improved)
     if rp_link not  in ["", None]:

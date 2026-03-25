@@ -48,10 +48,16 @@ def get_region(member):
 
     if len(regions) == 1:
         return regions[0]
-    #handle dragonstaone/crownlands dual role
+    #handle dragonstaone/crownlands dual role and pentos/lys/braavos dual roles
     if len(regions)== 2:
         if "Dragonstone" in regions:
             return regions[0] if regions[1] == "Crownlands" else regions[1]
+        if "Pentos" in regions:
+            return regions[1] if regions[1] == "Pentos" else regions[0]
+        if "Lys" in regions:
+            return regions[1] if regions[1] == "Lys" else regions[0]
+        if "Braavos" in regions:
+            return regions[1] if regions[1] == "Braavos" else regions[0]
     return None
 
 async def log_channel(guild):

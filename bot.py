@@ -181,7 +181,9 @@ async def stockpile_region(interaction: discord.Interaction, region: str):
         return
 
     data = database.get_stockpile(region)
-
+    maintenance = config.MAINTENANCE.get(region, {})
+    production = config.PRODUCTION.get(region, {})
+    
     msg = f"**{region} Stockpile**\n"
     msg += "```"
 

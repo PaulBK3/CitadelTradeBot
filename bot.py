@@ -70,6 +70,17 @@ async def save_edit_channel(guild):
     for channel in guild.text_channels:
         if channel.name == config.SAVE_EDIT_CHANNEL:
             return channel
+        
+def build_ck3_commands(msg: str, type: str, modifier_name: str, tier: int):
+    if type == "county":
+        msg += f"\neffect this = {{ every_held_title = {{ limit = {{ is_county = yes }} add_county_modifier = {{ modifier = {modifier_name}{tier} years = 10 }} }} }}\n"
+        msg += f"\neffect this = {{ every_vassal_or_below = {{ limit = {{ is_landed = yes }} every_held_title = {{ limit = {{ is_county = yes }} add_county_modifier = {{ modifier = {modifier_name}{tier} years = 10 }} }} }} }}"
+    if type == "character":
+        msg += f"\neffect this = {{ add_character_modifier = {{ modifier = {modifier_name}{tier} days = -1 }} every_vassal_or_below = {{ add_character_modifier = {{ modifier = {modifier_name}{tier} days = -1 }} }} }}"
+    if type == "midweek":
+        return msg
+    return msg
+
 # -------------------
 # Ready
 # -------------------
@@ -318,6 +329,7 @@ class BuyBuffConfirm(discord.ui.View):
 
         log = await log_channel(interaction.guild)
         if log:
+            msg = build_ck3_commands(msg, config.BUFFS[self.buff_type]['type'], config.BUFFS[self.buff_type]['modifier_name'], self.tier)
             await log.send("```diff\n+" + msg + "```\n")
 
     @discord.ui.button(label="Cancel", style=discord.ButtonStyle.red)
@@ -737,7 +749,9 @@ def calculate_debuffs(region):
         if tier > 0:
             debuffs[resource] = {
                 "tier": tier,
-                "name": data["tiers"][tier]["name"]
+                "name": data["tiers"][tier]["name"],
+                "type": data["type"],
+                "modifier_name": data["modifier_name"]
             }
         if amount < 0:
             database.set_amount(region, resource, 0)
@@ -777,11 +791,14 @@ class MaintenanceConfirm(discord.ui.View):
             if not debuffs:
                 continue
 
-            msg_debuff = f"⚠ **{region} Debuffs**\n"
+            msg_debuff_region = f"⚠ **{region} Debuffs**\n"
+            msg_debuff = ""
             for d in debuffs.values():
-                msg_debuff += f"```diff\n- {d['name']} (Tier {d['tier']})```\n"
-
-            await log.send(msg_debuff)
+                msg_debuff += f"- {d['name']} (Tier {d['tier']})"
+                msg_debuff = build_ck3_commands(msg_debuff, d['type'], d['modifier_name'], d['tier'])
+                msg_debuff += "\n"
+                msg_debuff += "\n"
+            await log.send(msg_debuff_region + "```diff\n" + msg_debuff + "```\n")
 
     @discord.ui.button(label="Cancel", style=discord.ButtonStyle.red)
     async def cancel(self, interaction: discord.Interaction, button: discord.ui.Button):

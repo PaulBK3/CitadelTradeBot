@@ -76,7 +76,7 @@ def build_ck3_commands(msg: str, type: str, modifier_name: str, tier: int):
         msg += f"\neffect this = {{ every_held_title = {{ limit = {{ is_county = yes }} add_county_modifier = {{ modifier = {modifier_name}{tier} years = 10 }} }} }}\n"
         msg += f"\neffect this = {{ every_vassal_or_below = {{ limit = {{ is_landed = yes }} every_held_title = {{ limit = {{ is_county = yes }} add_county_modifier = {{ modifier = {modifier_name}{tier} years = 10 }} }} }} }}"
     if type == "character":
-        msg += f"\neffect this = {{ add_character_modifier = {{ modifier = {modifier_name}{tier} days = -1 }} every_vassal_or_below = {{ add_character_modifier = {{ modifier = {modifier_name}{tier} days = -1 }} }} }}"
+        msg += f"\neffect this = {{ add_character_modifier = {{ modifier = {modifier_name}{tier} years = 10 }} every_vassal_or_below = {{ add_character_modifier = {{ modifier = {modifier_name}{tier} years = 10 }} }} }}"
     if type == "midweek":
         return msg
     return msg

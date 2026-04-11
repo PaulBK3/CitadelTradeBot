@@ -214,6 +214,43 @@ async def stockpile_region(interaction: discord.Interaction, region: str):
 
     await interaction.followup.send(msg, ephemeral=True)
 
+@staff.command(name="stockpile_all_regions", description="View all regions' stockpiles")
+
+async def stockpile_all_regions(interaction: discord.Interaction):
+
+    await interaction.response.defer(ephemeral=True)
+
+    if not has_role(interaction.user, config.TRADE_TEAM_ROLE):
+
+        await interaction.followup.send(
+            "Trade Team only.",
+            ephemeral=True
+        )
+        return
+    for region in config.REGION_ROLES:
+
+        data = database.get_stockpile(region)
+        maintenance = config.MAINTENANCE.get(region, {})
+        production = config.PRODUCTION.get(region, {})
+    
+        msg = f"**{region} Stockpile**\n"
+        msg += "```"
+
+        msg += f"{'Resource':<8}{'Current':>8}{'Maint':>8}{'Remain':>8}{'Production':>12}\n"
+        msg += "-" * 45 + "\n"
+
+        for resource, amount in data.items():
+            maint = maintenance.get(resource, 0)
+            remaining = amount - maint
+            prod = production.get(resource, 0)
+
+            msg += f"{resource:<8}{amount:>8}{maint:>8}{remaining:>8}{prod:>8}\n"
+        
+        msg += "```"
+    
+    print("STOCKPILE_ALL_REGIONS CALLED")
+
+    await interaction.followup.send(msg, ephemeral=True)
 # -------------------
 # TRANSFER STOCKPILE CONFIRMATION
 # -------------------

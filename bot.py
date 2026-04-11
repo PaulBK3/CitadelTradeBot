@@ -227,6 +227,7 @@ async def stockpile_all_regions(interaction: discord.Interaction):
             ephemeral=True
         )
         return
+    msg = ""
     for region in config.REGION_ROLES:
 
         data = database.get_stockpile(region)

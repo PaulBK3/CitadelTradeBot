@@ -233,7 +233,7 @@ async def stockpile_all_regions(interaction: discord.Interaction):
         maintenance = config.MAINTENANCE.get(region, {})
         production = config.PRODUCTION.get(region, {})
     
-        msg = f"**{region} Stockpile**\n"
+        msg += f"**{region} Stockpile**\n"
         msg += "```"
 
         msg += f"{'Resource':<8}{'Current':>8}{'Maint':>8}{'Remain':>8}{'Production':>12}\n"

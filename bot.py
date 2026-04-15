@@ -446,7 +446,7 @@ async def buy_buff(interaction: discord.Interaction, buff_type: str, tier: int):
 
 class TradeConfirm(discord.ui.View):
 
-    def __init__(self, sender, receiver, resource, amount, rp_link, comment=None):
+    def __init__(self, sender, receiver, resource, amount, rp_link, escorts, comment=None):
         super().__init__(timeout=30)
 
         self.sender = sender
@@ -454,6 +454,7 @@ class TradeConfirm(discord.ui.View):
         self.resource = resource
         self.amount = amount
         self.rp_link = rp_link
+        self.escorts = escorts
         self.comment = comment
         self.processed = False
 
@@ -498,7 +499,8 @@ class TradeConfirm(discord.ui.View):
         msg = (
             f"{self.sender} ➜ {self.receiver}\n"
             f"{self.amount} {self.resource}\n"
-            f"RP Link: {self.rp_link}"
+            f"RP Link: {self.rp_link}\n"
+            f"Escorts: {self.escorts}"
         )
 
         if self.comment:
@@ -545,6 +547,7 @@ class TradeConfirm(discord.ui.View):
     resource="Resource type",
     amount="Amount to send",
     rp_link="Link to RP post",
+    escorts="Troops/Fleets escorting the trade",
     comment="Optional note about the trade"
 )
 @app_commands.choices(
@@ -557,13 +560,14 @@ async def trade(
     resource: str,
     amount: int,
     rp_link: str,
+    escorts: str,
     comment: str | None = None
 ):
 
     if not has_role(interaction.user, config.TRADE_CHARTER_ROLE):
 
         await interaction.response.send_message(
-            "You lack Trade CHARTER.",
+            "You lack Trade CHARTA.",
             ephemeral=True
         )
         return
@@ -621,7 +625,7 @@ async def trade(
         )
         return
     
-    view = TradeConfirm(sender, receiver, resource, amount, rp_link, comment)
+    view = TradeConfirm(sender, receiver, resource, amount, rp_link, escorts, comment)
 
     msg = (
         f"Confirm Trade\n\n"
@@ -630,6 +634,7 @@ async def trade(
         f"Resource: {resource}\n"
         f"Amount: {amount}\n"
         f"RP Link: {rp_link}"
+        f"Escorts: {escorts}"
     )
 
     if comment:

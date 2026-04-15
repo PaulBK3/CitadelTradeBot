@@ -316,17 +316,16 @@ MAINTENANCE = {
 # -------------------
 
 BUFFS = {
-    #bugged
-#         "construction": {
-#         "name": "Construction Cost & Speed",
-#         "tiers": {
-#             "1 Well supplied masons": {"cost": {"Stone": 5}},
-#             "2 Large stockpiles": {"cost": {"Stone": 5, "Wood": 5}},
-#             "3 Empowered Masons guilds": {"cost": {"Stone": 5, "Wood": 5, "Luxury": 5}},
-#         },
-#         "type": "character",
-#         "modifier_name": "citadel_construction_t"
-#     }, 
+        "construction": {
+        "name": "Construction Cost & Speed",
+        "tiers": {
+            "1 Well supplied masons": {"cost": {"Stone": 5}},
+            "2 Large stockpiles": {"cost": {"Stone": 5, "Wood": 5}},
+            "3 Empowered Masons guilds": {"cost": {"Stone": 5, "Wood": 5, "Luxury": 5}},
+        },
+        "type": "character",
+        "modifier_name": "citadel_construction_t"
+    }, 
 
     "garrison": {
         "name": "Garrison & Fortification",
@@ -438,16 +437,16 @@ BUFFS = {
         "modifier_name": "citadel_heavy_t"
     },
 
-    # "maa_upkeep": {
-    #     "name": "MAA Upkeep Reduction",
-    #     "tiers": {
-    #         "1 Inspired Patriotism": {"cost": {"Iron": 5}},
-    #         "2 House Guard": {"cost": {"Iron": 5, "Wood": 5}},
-    #         "3 Personal Army": {"cost": {"Iron": 5, "Wood": 5, "Luxury": 5}},
-    #     },
-    #     "type": "character",
-    #     "modifier_name": "citadel_maa_upkeep_t"
-    # },
+    "maa_upkeep": {
+        "name": "MAA Upkeep Reduction",
+        "tiers": {
+            "1 Inspired Patriotism": {"cost": {"Iron": 5}},
+            "2 House Guard": {"cost": {"Iron": 5, "Wood": 5}},
+            "3 Personal Army": {"cost": {"Iron": 5, "Wood": 5, "Luxury": 5}},
+        },
+        "type": "character",
+        "modifier_name": "citadel_maa_upkeep_t"
+    },
 
     "artifacts": {
         "name": "Artifact Cost Reduction",

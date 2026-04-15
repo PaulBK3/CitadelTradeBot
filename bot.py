@@ -446,7 +446,7 @@ async def buy_buff(interaction: discord.Interaction, buff_type: str, tier: int):
 
 class TradeConfirm(discord.ui.View):
 
-    def __init__(self, sender, receiver, resource, amount, rp_link, escorts, comment=None):
+    def __init__(self, sender, receiver, resource, amount, rp_link, rumor, escorts, comment=None):
         super().__init__(timeout=30)
 
         self.sender = sender
@@ -454,6 +454,7 @@ class TradeConfirm(discord.ui.View):
         self.resource = resource
         self.amount = amount
         self.rp_link = rp_link
+        self.rumor = rumor
         self.escorts = escorts
         self.comment = comment
         self.processed = False
@@ -500,7 +501,8 @@ class TradeConfirm(discord.ui.View):
             f"{self.sender} ➜ {self.receiver}\n"
             f"{self.amount} {self.resource}\n"
             f"RP Link: {self.rp_link}\n"
-            f"Escorts: {self.escorts}"
+            f"Escorts: {self.escorts}\n"
+            f"Rumor post: {self.rumor}"
         )
 
         if self.comment:
@@ -547,6 +549,7 @@ class TradeConfirm(discord.ui.View):
     resource="Resource type",
     amount="Amount to send",
     rp_link="Link to RP post",
+    rumor="Link to rumor post",
     escorts="Troops/Fleets escorting the trade",
     comment="Optional note about the trade"
 )
@@ -560,6 +563,7 @@ async def trade(
     resource: str,
     amount: int,
     rp_link: str,
+    rumor: str,
     escorts: str,
     comment: str | None = None
 ):
@@ -624,8 +628,22 @@ async def trade(
             ephemeral=True
         )
         return
+        #check RP link format (basic check, can be improved)
+    if rumor not  in ["", None]:
+        if not rumor.startswith("https://discord"):
+            await interaction.response.send_message(
+                "Invalid rumor link format.",
+                ephemeral=True
+            )
+            return
+    else:
+        await interaction.response.send_message(
+            "No rumor link provided. Please include a link to the rumor post.",
+            ephemeral=True
+        )
+        return
     
-    view = TradeConfirm(sender, receiver, resource, amount, rp_link, escorts, comment)
+    view = TradeConfirm(sender, receiver, resource, amount, rp_link, rumor, escorts, comment)
 
     msg = (
         f"Confirm Trade\n\n"
@@ -634,6 +652,7 @@ async def trade(
         f"Resource: {resource}\n"
         f"Amount: {amount}\n"
         f"RP Link: {rp_link}"
+        f"Rumor post: {rumor}\n"
         f"Escorts: {escorts}"
     )
 

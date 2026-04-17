@@ -3,6 +3,7 @@ TRADE_CHARTER_ROLE = "Charter"
 TRADE_TEAM_ROLE = "Travel Team"
 SAVE_EDIT_CHANNEL = "✍︱save-edit-list"
 TRADE_LOG_CHANNEL = "trade-log"
+GREAT_HOUSE_ROLE = "Great House"
 
 RESOURCES = ["Food","Wood","Stone","Iron","Luxury"]
 

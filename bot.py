@@ -120,10 +120,9 @@ async def on_ready():
 async def stockpile(interaction: discord.Interaction):
     await interaction.response.defer(ephemeral=True)
 
-    if not has_role(interaction.user, config.TRADE_CHARTER_ROLE):
-
+    if not has_role(interaction.user, config.TRADE_CHARTER_ROLE) and not has_role(interaction.user, config.GREAT_HOUSE_ROLE):
         await interaction.followup.send(
-            "You need the Trade Charter role.",
+            "You need the Trade Charter or Great House role.",
             ephemeral=True
         )
         return

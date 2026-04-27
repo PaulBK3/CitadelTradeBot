@@ -25,7 +25,8 @@ REGION_ROLES = [
     "Lys",
     "Myr",
     "Pentos",
-    "Tyrosh"
+    "Tyrosh",
+    "Triarchy"
 ]
 
 # Weekly production per region
@@ -113,9 +114,9 @@ PRODUCTION = {
 
     "Andalos": {
         "Food": 0,
-        "Wood": 2,
-        "Stone": 7,
-        "Iron": 3,
+        "Wood": 1,
+        "Stone": 4,
+        "Iron": 2,
         "Luxury": 0,
     },
 
@@ -167,6 +168,14 @@ PRODUCTION = {
         "Iron": 0,
         "Luxury": 12,
     },
+
+    "Triarchy": {
+        "Food": 0,
+        "Wood": 0,
+        "Stone": 0,
+        "Iron": 0,
+        "Luxury": 0,
+    }
 
 }
 
@@ -254,11 +263,11 @@ MAINTENANCE = {
     },
 
     "Andalos": {
-        "Food": 1,
-        "Wood": 1,
-        "Stone": 3,
-        "Iron": 1,
-        "Luxury": 1,
+        "Food": 0,
+        "Wood": 0,
+        "Stone": 0,
+        "Iron": 0,
+        "Luxury": 0,
     },
 
     "Braavos": {
@@ -309,6 +318,14 @@ MAINTENANCE = {
         "Iron": 0,
         "Luxury": 4,
     },
+
+    "Triarchy": {
+        "Food": 0,
+        "Wood": 0,
+        "Stone": 0,
+        "Iron": 0,
+        "Luxury": 0,
+    }
 
 }
 

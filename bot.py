@@ -58,6 +58,8 @@ def get_region(member):
             return regions[1] if regions[1] == "Lys" else regions[0]
         if "Braavos" in regions:
             return regions[1] if regions[1] == "Braavos" else regions[0]
+        if "Triarchy" in regions:
+            return regions[1] if regions[1] == "Triarchy" else regions[0]
     return None
 
 async def log_channel(guild):

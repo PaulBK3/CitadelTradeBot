@@ -374,8 +374,8 @@ BUFFS = {
             "2 Fleet investment": {"cost": {"Wood": 5, "Iron": 5}},
             "3 Subsidised shipwrights": {"cost": {"Wood": 5, "Iron": 5, "Luxury": 5}},
         },
-        "type": "county",
-        "modifier_name": "citadel_ship_cost_t"
+        "type": "midweek",
+        "modifier_name": "citadel_midweek_only_t"
     },
 
     "siege": {

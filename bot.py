@@ -275,7 +275,7 @@ class TransferConfirm(discord.ui.View):
 
         log = await log_channel(interaction.guild)
         if log:
-            await log.send("Stockpile Transfer\n" + msg + "\n=======================\n")
+            await log.send("Stockpile Transfer\n" + msg + "=======================\n")
 
     @discord.ui.button(label="Cancel", style=discord.ButtonStyle.red)
     async def cancel(self, interaction: discord.Interaction, button: discord.ui.Button):

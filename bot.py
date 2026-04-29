@@ -617,7 +617,7 @@ async def trade(
 
     #check RP link format (basic check, can be improved)
     if rp_link not  in ["", None]:
-        if not rp_link.startswith("https://discord"):
+        if not rp_link.startswith("https://"):
             await interaction.response.send_message(
                 "Invalid RP link format.",
                 ephemeral=True
@@ -631,7 +631,7 @@ async def trade(
         return
         #check RP link format (basic check, can be improved)
     if rumor not  in ["", None]:
-        if not rumor.startswith("https://discord"):
+        if not rumor.startswith("https://"):
             await interaction.response.send_message(
                 "Invalid rumor link format.",
                 ephemeral=True

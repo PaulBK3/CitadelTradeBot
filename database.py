@@ -123,3 +123,14 @@ def set_amount(region, resource, amount):
     DO UPDATE SET amount = excluded.amount
     """, (region, resource, amount))
     conn.commit()
+
+def get_last_transfers(region, limit=10):
+    cursor.execute("""
+    SELECT id, sender, receiver, resource, amount, timestamp
+    FROM trades
+    WHERE sender=? OR receiver=?
+    ORDER BY timestamp DESC
+    LIMIT ?
+    """, (region, region, limit))
+    
+    return cursor.fetchall()

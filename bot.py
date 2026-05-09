@@ -250,6 +250,59 @@ async def stockpile_all_regions(interaction: discord.Interaction):
 
         # Send each region separately
         await interaction.followup.send(msg, ephemeral=True)
+
+# -------------------
+# VIEW LAST TRANSFERS
+# -------------------
+
+@bot.tree.command(name="transactions", description="View the last transfers from and to your region")
+async def last_transfers(interaction: discord.Interaction):
+    await interaction.response.defer(ephemeral=True)
+
+    if not has_role(interaction.user, config.TRADE_CHARTER_ROLE) and not has_role(interaction.user, config.GREAT_HOUSE_ROLE):
+        await interaction.followup.send(
+            "You need the Trade Charter or Great House role.",
+            ephemeral=True
+        )
+        return
+
+    region = get_region(interaction.user)
+
+    if not region:
+        await interaction.followup.send(
+            "No valid region role found.",
+            ephemeral=True
+        )
+        return
+
+    transfers = database.get_last_transfers(region)
+
+    if not transfers:
+        await interaction.followup.send(
+            f"No transfers found for {region}.",
+            ephemeral=True
+        )
+        return
+
+    msg = f"**{region} - Last Transfers**\n"
+    msg += "```\n"
+    msg += f"{'ID':<5}{'Direction':<12}{'Partner':<15}{'Resource':<12}{'Amount':<8}\n"
+    msg += "-" * 55 + "\n"
+
+    for trade_id, sender, receiver, resource, amount, timestamp in transfers:
+        if sender == region:
+            direction = "→ OUT"
+            partner = receiver
+        else:
+            direction = "← IN"
+            partner = sender
+        
+        msg += f"{trade_id:<5}{direction:<12}{partner:<15}{resource:<12}{amount:<8}\n"
+
+    msg += "```"
+
+    await interaction.followup.send(msg, ephemeral=True)
+
 # -------------------
 # TRANSFER STOCKPILE CONFIRMATION
 # -------------------

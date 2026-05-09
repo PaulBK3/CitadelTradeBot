@@ -255,8 +255,8 @@ async def stockpile_all_regions(interaction: discord.Interaction):
 # VIEW LAST TRANSFERS
 # -------------------
 
-@bot.tree.command(name="transactions", description="View the last transfers from and to your region")
-async def last_transfers(interaction: discord.Interaction):
+@bot.tree.command(name="transactions", description="View the last transactions from and to your region")
+async def transactions(interaction: discord.Interaction):
     await interaction.response.defer(ephemeral=True)
 
     if not has_role(interaction.user, config.TRADE_CHARTER_ROLE) and not has_role(interaction.user, config.GREAT_HOUSE_ROLE):
@@ -279,12 +279,12 @@ async def last_transfers(interaction: discord.Interaction):
 
     if not transfers:
         await interaction.followup.send(
-            f"No transfers found for {region}.",
+            f"No transactions found for {region}.",
             ephemeral=True
         )
         return
 
-    msg = f"**{region} - Last Transfers**\n"
+    msg = f"**{region} - Last Transactions**\n"
     msg += "```\n"
     msg += f"{'ID':<5}{'Direction':<12}{'Partner':<15}{'Resource':<12}{'Amount':<8}\n"
     msg += "-" * 55 + "\n"

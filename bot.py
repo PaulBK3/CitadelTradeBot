@@ -834,7 +834,7 @@ class TradeConfirm(discord.ui.View):
     resource=RESOURCE_CHOICES + [app_commands.Choice(name="Gold", value="Gold")]
 )
 @app_commands.autocomplete(
-    reveiver = region_autocomplete
+    receiver = region_autocomplete
 )
 async def trade(
     interaction: discord.Interaction,

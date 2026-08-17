@@ -44,7 +44,7 @@ def setup():
     """)
 
     cursor.execute("""
-    CREATE TABLE duchy_resources (
+    CREATE TABLE IF NOT EXISTS duchy_resources (
     duchy TEXT,
     resource TEXT,
     production INTEGER NOT NULL DEFAULT 0,

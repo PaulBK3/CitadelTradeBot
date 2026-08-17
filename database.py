@@ -61,7 +61,49 @@ def setup():
     )
     """)
 
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS regions (
+        name TEXT PRIMARY KEY
+    )
+    """)
     conn.commit()
+
+# -------------------
+# Regions
+# -------------------
+def create_region(name):
+    cursor.execute("""
+        INSERT INTO regions(name)
+        VALUES (?)
+    """, (name,))
+
+    conn.commit()
+
+def region_exists(name):
+    cursor.execute("""
+        SELECT 1
+        FROM regions
+        WHERE name=?
+    """, (name,))
+
+    return cursor.fetchone() is not None
+
+def delete_region(name):
+    cursor.execute("""
+        DELETE FROM regions
+        WHERE name=?
+    """, (name,))
+
+    conn.commit()
+
+def get_regions():
+    cursor.execute("""
+        SELECT name
+        FROM regions
+        ORDER BY name
+    """)
+
+    return [row[0] for row in cursor.fetchall()]
 
 # -------------------
 # REGIONAL TRADERS

@@ -15,10 +15,23 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 
 database.setup()
 
-REGION_CHOICES = [
-    app_commands.Choice(name=r, value=r)
-    for r in config.REGION_ROLES
-]
+async def region_autocomplete(
+    interaction: discord.Interaction,
+    current: str
+):
+
+    regions = database.get_regions()
+
+    current = current.lower()
+
+    return [
+        app_commands.Choice(
+            name=region,
+            value=region
+        )
+        for region in regions
+        if current in region.lower()
+    ][:25]
 
 async def duchy_autocomplete(
     interaction: discord.Interaction,
@@ -61,7 +74,7 @@ def has_role(member, role):
 
 def get_region(member):
 
-    regions = [r.name for r in member.roles if r.name in config.REGION_ROLES]
+    regions = [r.name for r in member.roles if r.name in database.get_regions()]
 
     if len(regions) == 1:
         return regions[0]
@@ -142,8 +155,8 @@ async def on_ready():
     region="Region the trader represents",
     user="Discord user who will be the trader"
 )
-@app_commands.choices(
-    region=REGION_CHOICES
+@app_commands.autocomplete(
+    region=region_autocomplete
 )
 async def assign_trader(
     interaction: discord.Interaction,
@@ -199,8 +212,8 @@ async def assign_trader(
 @app_commands.describe(
     region="Region whose trader should be removed"
 )
-@app_commands.choices(
-    region=REGION_CHOICES
+@app_commands.autocomplete(
+    region=region_autocomplete
 )
 async def remove_trader(
     interaction: discord.Interaction,
@@ -264,7 +277,7 @@ async def traders(
 
     trader_map = dict(rows)
 
-    for region in config.REGION_ROLES:
+    for region in database.get_regions():
 
         user_id = trader_map.get(region)
 
@@ -360,8 +373,8 @@ async def stockpile(interaction: discord.Interaction):
 
 @app_commands.describe(region="Region to inspect")
 
-@app_commands.choices(
-    region=REGION_CHOICES
+@app_commands.autocomplete(
+    region=region_autocomplete
 )
 
 async def stockpile_region(interaction: discord.Interaction, region: str):
@@ -376,7 +389,7 @@ async def stockpile_region(interaction: discord.Interaction, region: str):
         )
         return
 
-    if region not in config.REGION_ROLES:
+    if region not in database.get_regions():
 
         await interaction.followup.send(
             "Invalid region.",
@@ -429,7 +442,7 @@ async def stockpile_all_regions(interaction: discord.Interaction):
             ephemeral=True
         )
         return
-    for region in config.REGION_ROLES:
+    for region in database.get_regions():
 
         data = database.get_stockpile(region)
         economy = database.get_region_economy(region)
@@ -559,9 +572,9 @@ class TransferConfirm(discord.ui.View):
     receiver="Region receiving resources"
 )
 
-@app_commands.choices(
-    sender=REGION_CHOICES,
-    receiver=REGION_CHOICES
+@app_commands.autocomplete(
+    sender=region_autocomplete,
+    receiver=region_autocomplete
 )
 
 async def transfer_resources(
@@ -818,8 +831,10 @@ class TradeConfirm(discord.ui.View):
     comment="Optional note about the trade"
 )
 @app_commands.choices(
-    receiver=REGION_CHOICES,
     resource=RESOURCE_CHOICES + [app_commands.Choice(name="Gold", value="Gold")]
+)
+@app_commands.autocomplete(
+    reveiver = region_autocomplete
 )
 async def trade(
     interaction: discord.Interaction,
@@ -937,8 +952,10 @@ async def trade(
 @staff.command(name="modify_stockpile", description="Modify a region's stockpile")
 
 @app_commands.choices(
-    region=REGION_CHOICES,
     resource=RESOURCE_CHOICES
+)
+@app_commands.autocomplete(
+    region= region_autocomplete
 )
 
 async def modify_stockpile(
@@ -987,7 +1004,7 @@ class ProductionConfirm(discord.ui.View):
 
         msg = "**Production Applied**\n"
 
-        for region in config.REGION_ROLES:
+        for region in database.get_regions():
 
             economy = database.get_region_economy(region)
 
@@ -1107,7 +1124,7 @@ class MaintenanceConfirm(discord.ui.View):
 
         msg = "**Maintenance Applied**\n"
 
-        for region in config.REGION_ROLES:
+        for region in database.get_regions():
 
             economy = database.get_region_economy(region)
 
@@ -1145,7 +1162,7 @@ class MaintenanceConfirm(discord.ui.View):
                 msg + "\n=======================\n"
             )
 
-        for region in config.REGION_ROLES:
+        for region in database.get_regions():
 
             debuffs = calculate_debuffs(region)
 
@@ -1217,8 +1234,8 @@ async def maintenance(interaction: discord.Interaction):
 @staff.command(name="create_duchy",description="Create a duchy")
 
 @app_commands.describe(name="Name of the duchy", region="Region the duchy belongs to")
-@app_commands.choices(
-    region=REGION_CHOICES
+@app_commands.autocomplete(
+    region=region_autocomplete
 )
 async def create_duchy(
     interaction: discord.Interaction,
@@ -1258,11 +1275,9 @@ async def create_duchy(
     duchy="Duchy to move",
     region="New region"
 )
-@app_commands.choices(
-    region=REGION_CHOICES
-)
 @app_commands.autocomplete(
-    duchy=duchy_autocomplete
+    duchy=duchy_autocomplete,
+    region=region_autocomplete
 )
 async def assign_duchy(
     interaction: discord.Interaction,
@@ -1363,8 +1378,8 @@ async def set_duchy_withholding(
 @app_commands.describe(
     region="Optional region to inspect"
 )
-@app_commands.choices(
-    region=REGION_CHOICES
+@app_commands.autocomplete(
+    region=region_autocomplete
 )
 async def duchies(
     interaction: discord.Interaction,
@@ -1384,7 +1399,7 @@ async def duchies(
     if region:
         regions = [region]
     else:
-        regions = config.REGION_ROLES
+        regions = database.get_regions()
 
     msg = "**Duchy Economic Status**\n\n"
 
@@ -1413,6 +1428,161 @@ async def duchies(
         ephemeral=True
     )
 
+@staff.command(
+    name="create_region",
+    description="Create a new kingdom/region"
+)
+@app_commands.describe(
+    name="Name of the kingdom"
+)
+async def create_region(
+    interaction: discord.Interaction,
+    name: str
+):
+
+    if not has_role(
+        interaction.user,
+        config.TRADE_TEAM_ROLE
+    ):
+        await interaction.response.send_message(
+            "Trade Team only.",
+            ephemeral=True
+        )
+        return
+
+    if database.region_exists(name):
+        await interaction.response.send_message(
+            "That kingdom already exists.",
+            ephemeral=True
+        )
+        return
+
+    database.create_region(name)
+
+    await interaction.response.send_message(
+        f"Created **{name}**.",
+        ephemeral=True
+    )
+
+class DeleteRegionConfirm(discord.ui.View):
+
+    def __init__(self, region):
+        super().__init__(timeout=60)
+        self.region = region
+
+    @discord.ui.button(
+        label="Confirm Delete",
+        style=discord.ButtonStyle.danger
+    )
+    async def confirm(
+        self,
+        interaction: discord.Interaction,
+        button: discord.ui.Button
+    ):
+
+        region = self.region
+
+        # Do not allow deletion while duchies still belong
+        # to the region.
+        duchies = database.get_duchies(region)
+
+        if duchies:
+            names = ", ".join(
+                duchy[0]
+                for duchy in duchies
+            )
+
+            await interaction.response.edit_message(
+                content=(
+                    f"Cannot delete **{region}**.\n\n"
+                    f"The following duchies are still assigned to it:\n"
+                    f"{names}\n\n"
+                    f"Move all duchies to another region first."
+                ),
+                view=None
+            )
+            return
+
+        if not database.region_exists(region):
+            await interaction.response.edit_message(
+                content=(
+                    f"**{region}** no longer exists."
+                ),
+                view=None
+            )
+            return
+
+        # Remove the region's trader assignment.
+        database.remove_regional_trader(region)
+
+        # Remove regional buffs.
+        #database.delete_region_buffs(region)
+
+        # Remove regional stockpile.
+        #database.delete_region_stockpile(region)
+
+        # Finally remove the region itself.
+        database.delete_region(region)
+
+        await interaction.response.edit_message(
+            content=f"Deleted **{region}**.",
+            view=None
+        )
+
+    @discord.ui.button(
+        label="Cancel",
+        style=discord.ButtonStyle.secondary
+    )
+    async def cancel(
+        self,
+        interaction: discord.Interaction,
+        button: discord.ui.Button
+    ):
+
+        await interaction.response.edit_message(
+            content="Region deletion cancelled.",
+            view=None
+        )
+
+@staff.command(
+    name="delete_region",
+    description="Remove a kingdom/region"
+)
+@app_commands.describe(
+    region="Kingdom to remove"
+)
+@app_commands.autocomplete(
+    region=region_autocomplete
+)
+async def delete_region(
+    interaction: discord.Interaction,
+    region: str
+):
+
+    if not has_role(
+        interaction.user,
+        config.TRADE_TEAM_ROLE
+    ):
+        await interaction.response.send_message(
+            "Trade Team only.",
+            ephemeral=True
+        )
+        return
+
+    if not database.region_exists(region):
+        await interaction.response.send_message(
+            "That kingdom does not exist.",
+            ephemeral=True
+        )
+        return
+
+    await interaction.response.send_message(
+        f"Delete **{region}**?\n"
+        f"This should only be done after moving its duchies "
+        f"and handling its stockpile/trades.",
+        view=DeleteRegionConfirm(region),
+        ephemeral=True
+    )
 # -------------------------------
 # Run
 # -------------------------------

@@ -54,7 +54,69 @@ def setup():
     )
     """)
 
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS regional_traders (
+        region TEXT PRIMARY KEY,
+        user_id INTEGER NOT NULL
+    )
+    """)
+
     conn.commit()
+
+# -------------------
+# REGIONAL TRADERS
+# -------------------
+
+def set_regional_trader(region, user_id):
+    cursor.execute("""
+        INSERT INTO regional_traders(region, user_id)
+        VALUES (?, ?)
+    """, (region, user_id))
+
+    conn.commit()
+
+
+def get_regional_trader(region):
+    cursor.execute("""
+        SELECT user_id
+        FROM regional_traders
+        WHERE region=?
+    """, (region,))
+
+    result = cursor.fetchone()
+
+    return result[0] if result else None
+
+
+def remove_regional_trader(user_id):
+    cursor.execute("""
+        DELETE FROM regional_traders
+        WHERE user_id=?
+    """, (user_id,))
+
+    conn.commit()
+
+
+def get_all_regional_traders():
+    cursor.execute("""
+        SELECT region, user_id
+        FROM regional_traders
+        ORDER BY region
+    """)
+
+    return cursor.fetchall()
+
+def get_trader_region(user_id):
+    cursor.execute("""
+        SELECT region
+        FROM regional_traders
+        WHERE user_id=?
+    """, (user_id,))
+
+    result = cursor.fetchone()
+
+    return result[0] if result else None
+
 
 def get_stockpile(region):
 

@@ -131,6 +131,159 @@ async def on_ready():
     print("Trade Bot Ready")
 
 # -------------------
+# traders setup
+# -------------------
+
+@staff.command(
+    name="assign_trader",
+    description="Assign a Discord user as the trader for a region"
+)
+@app_commands.describe(
+    region="Region the trader represents",
+    user="Discord user who will be the trader"
+)
+@app_commands.choices(
+    region=REGION_CHOICES
+)
+async def assign_trader(
+    interaction: discord.Interaction,
+    region: str,
+    user: discord.Member
+):
+
+    if not has_role(
+        interaction.user,
+        config.TRADE_TEAM_ROLE
+    ):
+        await interaction.response.send_message(
+            "Trade Team only.",
+            ephemeral=True
+        )
+        return
+
+    old_user_id = database.get_regional_trader(region)
+
+    database.set_regional_trader(
+        region,
+        user.id
+    )
+
+    if old_user_id:
+        old_user = interaction.guild.get_member(old_user_id)
+
+        if old_user:
+            old_name = old_user.mention
+        else:
+            old_name = f"<@{old_user_id}>"
+
+        message = (
+            f"{region}'s trader has been changed.\n"
+            f"Previous trader: {old_name}\n"
+            f"New trader: {user.mention}"
+        )
+
+    else:
+        message = (
+            f"{user.mention} is now the trader for **{region}**."
+        )
+
+    await interaction.response.send_message(
+        message,
+        ephemeral=True
+    )
+
+@staff.command(
+    name="remove_trader",
+    description="Remove the trader assigned to a region"
+)
+@app_commands.describe(
+    region="Region whose trader should be removed"
+)
+@app_commands.choices(
+    region=REGION_CHOICES
+)
+async def remove_trader(
+    interaction: discord.Interaction,
+    region: str
+):
+
+    if not has_role(
+        interaction.user,
+        config.TRADE_TEAM_ROLE
+    ):
+        await interaction.response.send_message(
+            "Trade Team only.",
+            ephemeral=True
+        )
+        return
+
+    trader_id = database.get_regional_trader(region)
+
+    if trader_id is None:
+        await interaction.response.send_message(
+            f"{region} does not currently have a trader.",
+            ephemeral=True
+        )
+        return
+
+    database.remove_regional_trader(region)
+
+    await interaction.response.send_message(
+        f"Removed the trader for **{region}**.",
+        ephemeral=True
+    )
+
+@staff.command(
+    name="traders",
+    description="View the trader assigned to each region"
+)
+async def traders(
+    interaction: discord.Interaction
+):
+
+    if not has_role(
+        interaction.user,
+        config.TRADE_TEAM_ROLE
+    ):
+        await interaction.response.send_message(
+            "Trade Team only.",
+            ephemeral=True
+        )
+        return
+
+    rows = database.get_all_regional_traders()
+
+    if not rows:
+        await interaction.response.send_message(
+            "No regional traders have been assigned.",
+            ephemeral=True
+        )
+        return
+
+    msg = "**Regional Traders**\n\n"
+
+    trader_map = dict(rows)
+
+    for region in config.REGION_ROLES:
+
+        user_id = trader_map.get(region)
+
+        if user_id is None:
+            msg += f"**{region}** — No trader assigned\n"
+        else:
+            member = interaction.guild.get_member(user_id)
+
+            if member:
+                msg += f"**{region}** — {member.mention}\n"
+            else:
+                msg += f"**{region}** — <@{user_id}>\n"
+
+    await interaction.response.send_message(
+        msg,
+        ephemeral=True
+    )
+
+# -------------------
 # STOCKPILE
 # -------------------
 
@@ -146,15 +299,16 @@ async def stockpile(interaction: discord.Interaction):
         )
         return
 
-    region = get_region(interaction.user)
+    region = database.get_trader_region(interaction.user.id)
 
-    if not region:
-
-        await interaction.followup.send(
-            "No valid region role found.",
+    if region is None:
+        await interaction.response.send_message(
+            "You are not assigned as the trader for any region.",
             ephemeral=True
         )
         return
+
+    sender = region
 
     data = database.get_stockpile(region)
     economy = database.get_region_economy(region)
@@ -686,15 +840,16 @@ async def trade(
         )
         return
 
-    sender = get_region(interaction.user)
+    region = database.get_trader_region(interaction.user.id)
 
-    if not sender:
-
+    if region is None:
         await interaction.response.send_message(
-            "No valid region role found.",
+            "You are not assigned as the trader for any region.",
             ephemeral=True
         )
         return
+
+    sender = region
 
     if receiver == sender:
 

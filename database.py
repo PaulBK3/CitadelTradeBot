@@ -35,6 +35,25 @@ def setup():
     )
     """)
 
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS duchies (
+        name TEXT PRIMARY KEY,
+        region TEXT NOT NULL,
+        withholding INTEGER NOT NULL DEFAULT 0
+    )
+    """)
+
+    cursor.execute("""
+    CREATE TABLE duchy_resources (
+    duchy TEXT,
+    resource TEXT,
+    production INTEGER NOT NULL DEFAULT 0,
+    maintenance INTEGER NOT NULL DEFAULT 0,
+    PRIMARY KEY(duchy, resource),
+    FOREIGN KEY(duchy) REFERENCES duchies(name)
+    )
+    """)
+
     conn.commit()
 
 def get_stockpile(region):
@@ -133,4 +152,145 @@ def get_last_transfers(region, limit=10):
     LIMIT ?
     """, (region, region, limit))
     
+    return cursor.fetchall()
+
+# -------------------
+# DUCHIES
+# -------------------
+
+def create_duchy(name, region):
+    cursor.execute("""
+        INSERT INTO duchies(name, region, withholding)
+        VALUES (?, ?, 0)
+    """, (name, region))
+
+    conn.commit()
+
+
+def duchy_exists(name):
+    cursor.execute(
+        "SELECT 1 FROM duchies WHERE name=?",
+        (name,)
+    )
+
+    return cursor.fetchone() is not None
+
+
+def get_duchies(region=None):
+    if region is None:
+        cursor.execute("""
+            SELECT name, region, withholding
+            FROM duchies
+            ORDER BY region, name
+        """)
+    else:
+        cursor.execute("""
+            SELECT name, region, withholding
+            FROM duchies
+            WHERE region=?
+            ORDER BY name
+        """, (region,))
+
+    return cursor.fetchall()
+
+
+def get_duchy(name):
+    cursor.execute("""
+        SELECT name, region, withholding
+        FROM duchies
+        WHERE name=?
+    """, (name,))
+
+    return cursor.fetchone()
+
+
+def get_duchy_region(name):
+    cursor.execute(
+        "SELECT region FROM duchies WHERE name=?",
+        (name,)
+    )
+
+    result = cursor.fetchone()
+
+    return result[0] if result else None
+
+
+def assign_duchy(name, region):
+    cursor.execute("""
+        UPDATE duchies
+        SET region=?
+        WHERE name=?
+    """, (region, name))
+
+    conn.commit()
+
+
+def set_duchy_withholding(name, withholding):
+    cursor.execute("""
+        UPDATE duchies
+        SET withholding=?
+        WHERE name=?
+    """, (1 if withholding else 0, name))
+
+    conn.commit()
+
+
+def is_duchy_withholding(name):
+    cursor.execute("""
+        SELECT withholding
+        FROM duchies
+        WHERE name=?
+    """, (name,))
+
+    result = cursor.fetchone()
+
+    return bool(result[0]) if result else False
+
+# -------------------
+# DUCHY ECONOMY
+# -------------------
+
+def get_region_economy(region):
+    """
+    Returns the effective production and maintenance for a region.
+
+    Only duchies belonging to the region and not withholding
+    contribute to the calculation.
+    """
+
+    cursor.execute("""
+        SELECT
+            dr.resource,
+            COALESCE(SUM(dr.production), 0),
+            COALESCE(SUM(dr.maintenance), 0)
+        FROM duchy_resources dr
+        JOIN duchies d
+            ON d.name = dr.duchy
+        WHERE d.region=?
+          AND d.withholding=0
+        GROUP BY dr.resource
+    """, (region,))
+
+    rows = cursor.fetchall()
+
+    economy = {}
+
+    for resource, production, maintenance in rows:
+        economy[resource] = {
+            "production": production,
+            "maintenance": maintenance
+        }
+
+    return economy
+
+def get_region_duchy_summary(region):
+    cursor.execute("""
+        SELECT
+            name,
+            withholding
+        FROM duchies
+        WHERE region=?
+        ORDER BY name
+    """, (region,))
+
     return cursor.fetchall()

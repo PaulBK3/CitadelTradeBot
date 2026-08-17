@@ -20,6 +20,23 @@ REGION_CHOICES = [
     for r in config.REGION_ROLES
 ]
 
+async def duchy_autocomplete(
+    interaction: discord.Interaction,
+    current: str
+):
+    duchies = database.get_duchies()
+
+    current = current.lower()
+
+    return [
+        app_commands.Choice(
+            name=name,
+            value=name
+        )
+        for name, region, withholding in duchies
+        if current in name.lower()
+    ][:25]
+
 RESOURCE_CHOICES = [
     app_commands.Choice(name=r, value=r)
     for r in config.RESOURCES
@@ -140,8 +157,17 @@ async def stockpile(interaction: discord.Interaction):
         return
 
     data = database.get_stockpile(region)
-    maintenance = config.MAINTENANCE.get(region, {})
-    production = config.PRODUCTION.get(region, {})
+    economy = database.get_region_economy(region)
+
+    maintenance = {
+        resource: values["maintenance"]
+        for resource, values in economy.items()
+    }
+
+    production = {
+        resource: values["production"]
+        for resource, values in economy.items()
+    }
 
     msg = f"**{region} Stockpile**\n"
     msg += "```"
@@ -157,6 +183,18 @@ async def stockpile(interaction: discord.Interaction):
         msg += f"{resource:<8}{amount:>8}{maint:>8}{remaining:>8}{prod:>8}\n"
 
     msg += "```"
+    duchies = database.get_region_duchy_summary(region)
+
+    msg += "\n**Duchies**\n"
+
+    if not duchies:
+        msg += "No duchies registered.\n"
+    else:
+        for name, withholding in duchies:
+            if withholding:
+                msg += f"✗ {name} — WITHHOLDING\n"
+            else:
+                msg += f"✓ {name}\n"
 
     print("STOCKPILE CALLED", region)
 
@@ -193,8 +231,17 @@ async def stockpile_region(interaction: discord.Interaction, region: str):
         return
 
     data = database.get_stockpile(region)
-    maintenance = config.MAINTENANCE.get(region, {})
-    production = config.PRODUCTION.get(region, {})
+    economy = database.get_region_economy(region)
+
+    maintenance = {
+        resource: values["maintenance"]
+        for resource, values in economy.items()
+    }
+
+    production = {
+        resource: values["production"]
+        for resource, values in economy.items()
+    }
     
     msg = f"**{region} Stockpile**\n"
     msg += "```"
@@ -231,8 +278,17 @@ async def stockpile_all_regions(interaction: discord.Interaction):
     for region in config.REGION_ROLES:
 
         data = database.get_stockpile(region)
-        maintenance = config.MAINTENANCE.get(region, {})
-        production = config.PRODUCTION.get(region, {})
+        economy = database.get_region_economy(region)
+
+        maintenance = {
+            resource: values["maintenance"]
+            for resource, values in economy.items()
+        }
+
+        production = {
+            resource: values["production"]
+            for resource, values in economy.items()
+        }
 
         msg = f"**{region} Stockpile**\n"
         msg += "```"
@@ -764,17 +820,42 @@ class ProductionConfirm(discord.ui.View):
     def __init__(self):
         super().__init__(timeout=30)
 
-    @discord.ui.button(label="Confirm Production", style=discord.ButtonStyle.green)
-    async def confirm(self, interaction: discord.Interaction, button: discord.ui.Button):
+    @discord.ui.button(
+    label="Confirm Production",
+    style=discord.ButtonStyle.green
+)
+    async def confirm(
+        self,
+        interaction: discord.Interaction,
+        button: discord.ui.Button
+    ):
 
         msg = "**Production Applied**\n"
 
-        for region, resources in config.PRODUCTION.items():
-            msg += f"**{region}**\n"
-            for resource, amount in resources.items():
+        for region in config.REGION_ROLES:
 
-                database.change_resource(region, resource, amount)
-                msg += f"{amount} {resource}\n"
+            economy = database.get_region_economy(region)
+
+            if not economy:
+                continue
+
+            msg += f"**{region}**\n"
+
+            for resource, values in economy.items():
+
+                amount = values["production"]
+
+                if amount <= 0:
+                    continue
+
+                database.change_resource(
+                    region,
+                    resource,
+                    amount
+                )
+
+                msg += f"+{amount} {resource}\n"
+
             msg += "--------------------------\n"
 
         await interaction.response.edit_message(
@@ -783,8 +864,11 @@ class ProductionConfirm(discord.ui.View):
         )
 
         log = await log_channel(interaction.guild)
+
         if log:
-            await log.send(msg + "\n=======================\n")
+            await log.send(
+                msg + "\n=======================\n"
+            )
 
     @discord.ui.button(label="Cancel", style=discord.ButtonStyle.red)
     async def cancel(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -793,25 +877,6 @@ class ProductionConfirm(discord.ui.View):
             content="Production cancelled.",
             view=None
         )
-
-@tasks.loop(hours=168)
-async def weekly_production():
-
-    guild = bot.guilds[0]
-    log = await log_channel(guild)
-
-    msg = "**Weekly Production Applied**\n"
-
-    for region, resources in config.PRODUCTION.items():
-
-        for resource, amount in resources.items():
-
-            database.change_resource(region, resource, amount)
-
-            msg += f"{region}: +{amount} {resource}\n"
-
-    if log:
-        await log.send(msg+ "\n=======================\n")
 
 @staff.command(name="production", description="Apply weekly production")
 
@@ -875,17 +940,42 @@ class MaintenanceConfirm(discord.ui.View):
     def __init__(self):
         super().__init__(timeout=30)
 
-    @discord.ui.button(label="Confirm Maintenance", style=discord.ButtonStyle.green)
-    async def confirm(self, interaction: discord.Interaction, button: discord.ui.Button):
+    @discord.ui.button(
+    label="Confirm Maintenance",
+    style=discord.ButtonStyle.green
+)
+    async def confirm(
+        self,
+        interaction: discord.Interaction,
+        button: discord.ui.Button
+    ):
 
         msg = "**Maintenance Applied**\n"
 
-        for region, resources in config.MAINTENANCE.items():
-            msg += f"**{region}**\n"
-            for resource, amount in resources.items():
+        for region in config.REGION_ROLES:
 
-                database.change_resource(region, resource, -amount)
-                msg += f"{amount} {resource}\n"
+            economy = database.get_region_economy(region)
+
+            if not economy:
+                continue
+
+            msg += f"**{region}**\n"
+
+            for resource, values in economy.items():
+
+                amount = values["maintenance"]
+
+                if amount <= 0:
+                    continue
+
+                database.change_resource(
+                    region,
+                    resource,
+                    -amount
+                )
+
+                msg += f"-{amount} {resource}\n"
+
             msg += "--------------------------\n"
 
         await interaction.response.edit_message(
@@ -894,24 +984,44 @@ class MaintenanceConfirm(discord.ui.View):
         )
 
         log = await log_channel(interaction.guild)
-        if log:
-            await log.send(msg+ "\n=======================\n")
 
-        # send debuffs as separate messages
-        for region in config.MAINTENANCE.keys():
+        if log:
+            await log.send(
+                msg + "\n=======================\n"
+            )
+
+        for region in config.REGION_ROLES:
+
             debuffs = calculate_debuffs(region)
 
-            if not debuffs:
+            if not debuffs or not log:
                 continue
 
             msg_debuff_region = f"⚠ **{region} Debuffs**\n"
             msg_debuff = ""
+
             for d in debuffs.values():
-                msg_debuff += f"- {d['name']} (Tier {d['tier']})"
-                msg_debuff = build_ck3_commands(msg_debuff, d['type'], d['modifier_name'], d['tier'])
-                msg_debuff += "\n"
-                msg_debuff += "\n"
-            await log.send(msg_debuff_region + "```diff\n" + msg_debuff + "```\n")
+
+                msg_debuff += (
+                    f"- {d['name']} "
+                    f"(Tier {d['tier']})"
+                )
+
+                msg_debuff = build_ck3_commands(
+                    msg_debuff,
+                    d["type"],
+                    d["modifier_name"],
+                    d["tier"]
+                )
+
+                msg_debuff += "\n\n"
+
+            await log.send(
+                msg_debuff_region +
+                "```diff\n" +
+                msg_debuff +
+                "```\n"
+            )
 
     @discord.ui.button(label="Cancel", style=discord.ButtonStyle.red)
     async def cancel(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -920,25 +1030,6 @@ class MaintenanceConfirm(discord.ui.View):
             content="Maintenance cancelled.",
             view=None
         )
-
-@tasks.loop(hours=168)
-async def weekly_maintenance():
-
-    guild = bot.guilds[0]
-    log = await log_channel(guild)
-
-    msg = "**Weekly Maintenance Applied**\n"
-
-    for region, resources in config.MAINTENANCE.items():
-
-        for resource, amount in resources.items():
-
-            database.change_resource(region, resource, -amount)
-
-            msg += f"{region}: -{amount} {resource}\n"
-
-    if log:
-        await log.send(msg + "\n=======================\n")
 
 @staff.command(name="maintenance", description="Apply maintenance costs")
 
@@ -964,6 +1055,209 @@ async def maintenance(interaction: discord.Interaction):
         view=MaintenanceConfirm(),
         ephemeral=True
     )
+
+# -------------------------------
+# Duchy commands
+# -------------------------------
+@staff.command(name="create_duchy",description="Create a duchy")
+
+@app_commands.describe(name="Name of the duchy", region="Region the duchy belongs to")
+@app_commands.choices(
+    region=REGION_CHOICES
+)
+async def create_duchy(
+    interaction: discord.Interaction,
+    name: str,
+    region: str
+):
+
+    if not has_role(
+        interaction.user,
+        config.TRADE_TEAM_ROLE
+    ):
+        await interaction.response.send_message(
+            "Trade Team only.",
+            ephemeral=True
+        )
+        return
+
+    if database.duchy_exists(name):
+        await interaction.response.send_message(
+            "That duchy already exists.",
+            ephemeral=True
+        )
+        return
+
+    database.create_duchy(name, region)
+
+    await interaction.response.send_message(
+        f"Created **{name}** in **{region}**.",
+        ephemeral=True
+    )
+
+@staff.command(
+    name="assign_duchy",
+    description="Move a duchy to another region"
+)
+@app_commands.describe(
+    duchy="Duchy to move",
+    region="New region"
+)
+@app_commands.choices(
+    region=REGION_CHOICES
+)
+@app_commands.autocomplete(
+    duchy=duchy_autocomplete
+)
+async def assign_duchy(
+    interaction: discord.Interaction,
+    duchy: str,
+    region: str
+):
+
+    if not has_role(
+        interaction.user,
+        config.TRADE_TEAM_ROLE
+    ):
+        await interaction.response.send_message(
+            "Trade Team only.",
+            ephemeral=True
+        )
+        return
+
+    old = database.get_duchy(duchy)
+
+    if not old:
+        await interaction.response.send_message(
+            "Unknown duchy.",
+            ephemeral=True
+        )
+        return
+
+    old_region = old[1]
+
+    database.assign_duchy(
+        duchy,
+        region
+    )
+
+    await interaction.response.send_message(
+        f"**{duchy}** moved from "
+        f"**{old_region}** to **{region}**.",
+        ephemeral=True
+    )
+
+@staff.command(
+    name="set_duchy_withholding",
+    description="Toggle whether a duchy contributes to its region"
+)
+@app_commands.describe(
+    duchy="Duchy",
+    withholding="Whether the duchy withholds its resources"
+)
+@app_commands.autocomplete(
+    duchy=duchy_autocomplete
+)
+async def set_duchy_withholding(
+    interaction: discord.Interaction,
+    duchy: str,
+    withholding: bool
+):
+
+    if not has_role(
+        interaction.user,
+        config.TRADE_TEAM_ROLE
+    ):
+        await interaction.response.send_message(
+            "Trade Team only.",
+            ephemeral=True
+        )
+        return
+
+    if not database.duchy_exists(duchy):
+        await interaction.response.send_message(
+            "Unknown duchy.",
+            ephemeral=True
+        )
+        return
+
+    database.set_duchy_withholding(
+        duchy,
+        withholding
+    )
+
+    region = database.get_duchy_region(
+        duchy
+    )
+
+    if withholding:
+        status = "WITHHOLDING"
+    else:
+        status = "CONTRIBUTING"
+
+    await interaction.response.send_message(
+        f"**{duchy}** in **{region}** is now "
+        f"**{status}**.",
+        ephemeral=True
+    )
+
+@staff.command(
+    name="duchies",
+    description="View duchies and their economic status"
+)
+@app_commands.describe(
+    region="Optional region to inspect"
+)
+@app_commands.choices(
+    region=REGION_CHOICES
+)
+async def duchies(
+    interaction: discord.Interaction,
+    region: str | None = None
+):
+
+    if not has_role(
+        interaction.user,
+        config.TRADE_TEAM_ROLE
+    ):
+        await interaction.response.send_message(
+            "Trade Team only.",
+            ephemeral=True
+        )
+        return
+
+    if region:
+        regions = [region]
+    else:
+        regions = config.REGION_ROLES
+
+    msg = "**Duchy Economic Status**\n\n"
+
+    for current_region in regions:
+
+        rows = database.get_region_duchy_summary(
+            current_region
+        )
+
+        if not rows:
+            continue
+
+        msg += f"**{current_region}**\n"
+
+        for name, withholding in rows:
+
+            if withholding:
+                msg += f"✗ {name} — WITHHOLDING\n"
+            else:
+                msg += f"✓ {name} — contributing\n"
+
+        msg += "\n"
+
+    await interaction.response.send_message(
+        msg,
+        ephemeral=True
+    )
+
 # -------------------------------
 # Run
 # -------------------------------

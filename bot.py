@@ -103,7 +103,7 @@ async def save_edit_channel(guild):
     for channel in guild.text_channels:
         if channel.name == config.SAVE_EDIT_CHANNEL:
             return channel
-        
+'''
 def build_ck3_commands(msg: str, type: str, modifier_name: str, tier: int):
     if type == "county":
         msg += f"\neffect this = {{ every_held_title = {{ limit = {{ is_county = yes }} add_county_modifier = {{ modifier = {modifier_name}{tier} years = 10 }} }} }}\n"
@@ -113,7 +113,7 @@ def build_ck3_commands(msg: str, type: str, modifier_name: str, tier: int):
     if type == "midweek":
         return msg
     return msg
-
+'''
 def calculate_buff_cost(region, buff_type, tier):
     buff_data = config.BUFFS[buff_type]
 

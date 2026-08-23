@@ -4,6 +4,7 @@ from discord.ext import commands, tasks
 import config
 import os
 import database
+import math
 
 from dotenv import load_dotenv
 
@@ -112,6 +113,20 @@ def build_ck3_commands(msg: str, type: str, modifier_name: str, tier: int):
     if type == "midweek":
         return msg
     return msg
+
+def calculate_buff_cost(region, buff_type, tier):
+    buff_data = config.BUFFS[buff_type]
+
+    tier_name = list(buff_data["tiers"].keys())[tier - 1]
+
+    base_cost = buff_data["tiers"][tier_name]["cost"]
+
+    duchy_count = database.get_contributing_duchy_count(region)
+
+    return {
+        resource: amount * duchy_count
+        for resource, amount in base_cost.items()
+    }
 
 # -------------------
 # Ready
@@ -641,7 +656,7 @@ class BuyBuffConfirm(discord.ui.View):
 
         log = await log_channel(interaction.guild)
         if log:
-            msg = build_ck3_commands(msg, config.BUFFS[self.buff_type]['type'], config.BUFFS[self.buff_type]['modifier_name'], self.tier)
+            #msg = build_ck3_commands(msg, config.BUFFS[self.buff_type]['type'], config.BUFFS[self.buff_type]['modifier_name'], self.tier)
             await log.send("```diff\n+" + msg + "```\n")
 
     @discord.ui.button(label="Cancel", style=discord.ButtonStyle.red)
@@ -685,11 +700,13 @@ async def buy_buff(interaction: discord.Interaction, buff_type: str, tier: int):
 
     buff_data = config.BUFFS[buff_type]
 
-    region = get_region(interaction.user)
+    region = database.get_trader_region(interaction.user.id)
     
-    tier_name = list(buff_data["tiers"].keys())[tier - 1]
-
-    cost = buff_data["tiers"][tier_name]["cost"]
+    cost = calculate_buff_cost(
+        region,
+        buff_type,
+        tier
+    )
 
     # check resources
     insufficient = []
@@ -1082,29 +1099,44 @@ def calculate_debuffs(region):
 
     debuffs = {}
 
+    duchy_count = database.get_contributing_duchy_count(region)
+
+    if duchy_count <= 0:
+        return debuffs
+
     for resource, data in config.DEBUFFS.items():
 
-        amount = database.get_amount(region, resource)
+        amount = database.get_amount(
+            region,
+            resource
+        )
 
-        # simple thresholds (you can tweak later)
-        if amount < -6:
-            tier = 3
-        elif amount < -3:
-            tier = 2
-        elif amount < 0:
-            tier = 1
-        else:
-            tier = 0
+        if amount >= 0:
+            continue
 
-        if tier > 0:
-            debuffs[resource] = {
-                "tier": tier,
-                "name": data["tiers"][tier]["name"],
-                "type": data["type"],
-                "modifier_name": data["modifier_name"]
-            }
-        if amount < 0:
-            database.set_amount(region, resource, 0)
+        deficit = abs(amount)
+
+        tier = math.ceil(
+            deficit / duchy_count
+        )
+
+        tier = min(tier, 3)
+
+        debuffs[resource] = {
+            "tier": tier,
+            "name": data["tiers"][tier]["name"],
+            "type": data["type"],
+            "modifier_name": data["modifier_name"]
+        }
+
+        # Reset the negative stockpile after applying
+        # the debuff.
+        database.set_amount(
+            region,
+            resource,
+            0
+        )
+
     return debuffs
 
 class MaintenanceConfirm(discord.ui.View):
@@ -1178,13 +1210,13 @@ class MaintenanceConfirm(discord.ui.View):
                     f"- {d['name']} "
                     f"(Tier {d['tier']})"
                 )
-
+                '''
                 msg_debuff = build_ck3_commands(
                     msg_debuff,
                     d["type"],
                     d["modifier_name"],
                     d["tier"]
-                )
+                )'''
 
                 msg_debuff += "\n\n"
 
@@ -1194,6 +1226,23 @@ class MaintenanceConfirm(discord.ui.View):
                 msg_debuff +
                 "```\n"
             )
+
+        withholding = database.get_withholding_duchy_resources()
+
+        if withholding:
+
+            msg_withholding = "\n**Withholding Duchies**\n"
+
+            current_duchy = None
+
+            for duchy, region, resource, amount in withholding:
+
+                if duchy != current_duchy:
+
+                    msg_withholding += f"\n**{duchy}** ({region})\n"
+                    current_duchy = duchy
+
+                msg_withholding += f"{resource}: {amount}\n"
 
     @discord.ui.button(label="Cancel", style=discord.ButtonStyle.red)
     async def cancel(self, interaction: discord.Interaction, button: discord.ui.Button):

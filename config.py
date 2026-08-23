@@ -1,4 +1,4 @@
-GUILD_ID = 1222288591707967568
+GUILD_ID = 1222288191707967168
 TRADE_CHARTER_ROLE = "Charter"
 TRADE_TEAM_ROLE = "Travel Team"
 SAVE_EDIT_CHANNEL = "✍︱save-edit-list"
@@ -15,9 +15,9 @@ BUFFS = {
         "construction": {
         "name": "Construction Cost & Speed",
         "tiers": {
-            "1 Well supplied masons": {"cost": {"Stone": 5}},
-            "2 Large stockpiles": {"cost": {"Stone": 5, "Wood": 5}},
-            "3 Empowered Masons guilds": {"cost": {"Stone": 5, "Wood": 5, "Luxury": 5}},
+            "1 Well supplied masons": {"cost": {"Stone": 1}},
+            "2 Large stockpiles": {"cost": {"Stone": 1, "Wood": 1}},
+            "3 Empowered Masons guilds": {"cost": {"Stone": 1, "Wood": 1, "Luxury": 1}},
         },
         "type": "character",
         "modifier_name": "citadel_construction_t"
@@ -26,9 +26,9 @@ BUFFS = {
     "garrison": {
         "name": "Garrison & Fortification",
         "tiers": {
-            "1 Improved Fortification": {"cost": {"Stone": 5}},
-            "2 Reinforced garrisons": {"cost": {"Stone": 5, "Iron": 5}},
-            "3 Mighty Strongholds": {"cost": {"Stone": 5, "Iron": 5, "Luxury": 5}},
+            "1 Improved Fortification": {"cost": {"Stone": 1}},
+            "2 Reinforced garrisons": {"cost": {"Stone": 1, "Iron": 1}},
+            "3 Mighty Strongholds": {"cost": {"Stone": 1, "Iron": 1, "Luxury": 1}},
         },
         "type": "county",
         "modifier_name": "citadel_fort_t"
@@ -37,9 +37,9 @@ BUFFS = {
     "travel": {
         "name": "Travel Safety & Speed",
         "tiers": {
-            "1 Improved roads": {"cost": {"Stone": 5}},
-            "2 Road Patrols": {"cost": {"Stone": 5, "Food": 5}},
-            "3 Manned Waystations": {"cost": {"Stone": 5, "Food": 5, "Luxury": 5}},
+            "1 Improved roads": {"cost": {"Stone": 1}},
+            "2 Road Patrols": {"cost": {"Stone": 1, "Food": 1}},
+            "3 Manned Waystations": {"cost": {"Stone": 1, "Food": 1, "Luxury": 1}},
         },
         "type": "county",
         "modifier_name": "citadel_travel_t"
@@ -48,9 +48,9 @@ BUFFS = {
     "ships": {
         "name": "Ship Cost Reduction",
         "tiers": {
-            "1 Stockpiled Timber": {"cost": {"Wood": 5}},
-            "2 Fleet investment": {"cost": {"Wood": 5, "Iron": 5}},
-            "3 Subsidised shipwrights": {"cost": {"Wood": 5, "Iron": 5, "Luxury": 5}},
+            "1 Stockpiled Timber": {"cost": {"Wood": 1}},
+            "2 Fleet investment": {"cost": {"Wood": 1, "Iron": 1}},
+            "3 Subsidised shipwrights": {"cost": {"Wood": 1, "Iron": 1, "Luxury": 1}},
         },
         "type": "midweek",
         "modifier_name": "citadel_midweek_only_t"
@@ -59,9 +59,9 @@ BUFFS = {
     "siege": {
         "name": "Siege Progress",
         "tiers": {
-            "1 Reinforced Frames": {"cost": {"Wood": 5}},
-            "2 Flaming projectiles": {"cost": {"Wood": 5, "Stone": 5}},
-            "3 Armoured crew": {"cost": {"Wood": 5, "Stone": 5, "Iron": 5}},
+            "1 Reinforced Frames": {"cost": {"Wood": 1}},
+            "2 Flaming projectiles": {"cost": {"Wood": 1, "Stone": 1}},
+            "3 Armoured crew": {"cost": {"Wood": 1, "Stone": 1, "Iron": 1}},
         },
         "type": "county",
         "modifier_name": "citadel_siege_t"
@@ -70,9 +70,9 @@ BUFFS = {
     "archers": {
         "name": "Archers & Skirmishers",
         "tiers": {
-            "1 Yew Bows": {"cost": {"Wood": 5}},
-            "2 Extra Rations": {"cost": {"Wood": 5, "Food": 5}},
-            "3 Mail Armour": {"cost": {"Wood": 5, "Food": 5, "Iron": 5}},
+            "1 Yew Bows": {"cost": {"Wood": 1}},
+            "2 Extra Rations": {"cost": {"Wood": 1, "Food": 1}},
+            "3 Mail Armour": {"cost": {"Wood": 1, "Food": 1, "Iron": 1}},
         },
         "type": "county",
         "modifier_name": "citadel_maa_t"
@@ -81,9 +81,9 @@ BUFFS = {
     "development": {
         "name": "Development Growth",
         "tiers": {
-            "1 Alms!": {"cost": {"Food": 5}},
-            "2 Public Housing": {"cost": {"Food": 5, "Luxury": 5}},
-            "3 City Planning": {"cost": {"Food": 5, "Luxury": 5, "Stone": 5}},
+            "1 Alms!": {"cost": {"Food": 1}},
+            "2 Public Housing": {"cost": {"Food": 1, "Luxury": 1}},
+            "3 City Planning": {"cost": {"Food": 1, "Luxury": 1, "Stone": 1}},
         },
         "type": "county",
         "modifier_name": "citadel_development_t"
@@ -92,9 +92,9 @@ BUFFS = {
     "fertility": {
         "name": "Fertility & Health",
         "tiers": {
-            "1 Crop Rotations": {"cost": {"Food": 5}},
-            "2 Public Fountains": {"cost": {"Food": 5, "Stone": 5}},
-            "3 Welfare State": {"cost": {"Food": 5, "Stone": 5, "Luxury": 5}},
+            "1 Crop Rotations": {"cost": {"Food": 1}},
+            "2 Public Fountains": {"cost": {"Food": 1, "Stone": 1}},
+            "3 Welfare State": {"cost": {"Food": 1, "Stone": 1, "Luxury": 1}},
         },
         "type": "character",
         "modifier_name": "citadel_health_t"
@@ -103,9 +103,9 @@ BUFFS = {
     "levy": {
         "name": "Levy Replenishment",
         "tiers": {
-            "1 Conscription": {"cost": {"Food": 5}},
-            "2 Press Gangs": {"cost": {"Food": 5, "Wood": 5}},
-            "3 Mass Mobilisation": {"cost": {"Food": 5, "Wood": 5, "Iron": 5}},
+            "1 Conscription": {"cost": {"Food": 1}},
+            "2 Press Gangs": {"cost": {"Food": 1, "Wood": 1}},
+            "3 Mass Mobilisation": {"cost": {"Food": 1, "Wood": 1, "Iron": 1}},
         },
         "type": "county",
         "modifier_name": "citadel_levy_t"
@@ -114,9 +114,9 @@ BUFFS = {
     "army_maintenance": {
         "name": "Army Maintenance Reduction",
         "tiers": {
-            "1 Efficient Rationing": {"cost": {"Food": 5}},
-            "2 Supply Trains": {"cost": {"Food": 5, "Wood": 5}},
-            "3 Forward Supply Bases": {"cost": {"Food": 5, "Wood": 5, "Stone": 5}},
+            "1 Efficient Rationing": {"cost": {"Food": 1}},
+            "2 Supply Trains": {"cost": {"Food": 1, "Wood": 1}},
+            "3 Forward Supply Bases": {"cost": {"Food": 1, "Wood": 1, "Stone": 1}},
         },
         "type": "character",
         "modifier_name": "citadel_army_maintenance_t"
@@ -125,9 +125,9 @@ BUFFS = {
     "heavy_units": {
         "name": "Heavy Infantry & Cavalry",
         "tiers": {
-            "1 Reinforced Weapons": {"cost": {"Iron": 5}},
-            "2 Bread & Wine": {"cost": {"Iron": 5, "Food": 5}},
-            "3 Standing Army": {"cost": {"Iron": 5, "Food": 5, "Wood": 5}},
+            "1 Reinforced Weapons": {"cost": {"Iron": 1}},
+            "2 Bread & Wine": {"cost": {"Iron": 1, "Food": 1}},
+            "3 Standing Army": {"cost": {"Iron": 1, "Food": 1, "Wood": 1}},
         },
         "type": "county",
         "modifier_name": "citadel_heavy_t"
@@ -136,9 +136,9 @@ BUFFS = {
     "maa_upkeep": {
         "name": "MAA Upkeep Reduction",
         "tiers": {
-            "1 Inspired Patriotism": {"cost": {"Iron": 5}},
-            "2 House Guard": {"cost": {"Iron": 5, "Wood": 5}},
-            "3 Personal Army": {"cost": {"Iron": 5, "Wood": 5, "Luxury": 5}},
+            "1 Inspired Patriotism": {"cost": {"Iron": 1}},
+            "2 House Guard": {"cost": {"Iron": 1, "Wood": 1}},
+            "3 Personal Army": {"cost": {"Iron": 1, "Wood": 1, "Luxury": 1}},
         },
         "type": "character",
         "modifier_name": "citadel_maa_upkeep_t"
@@ -147,9 +147,9 @@ BUFFS = {
     "artifacts": {
         "name": "Artifact Cost Reduction",
         "tiers": {
-            "1 Fine Tools": {"cost": {"Iron": 5}},
-            "2 Thriving Workshops": {"cost": {"Iron": 5, "Stone": 5}},
-            "3 Exotic Materials": {"cost": {"Iron": 5, "Stone": 5, "Luxury": 5}},
+            "1 Fine Tools": {"cost": {"Iron": 1}},
+            "2 Thriving Workshops": {"cost": {"Iron": 1, "Stone": 1}},
+            "3 Exotic Materials": {"cost": {"Iron": 1, "Stone": 1, "Luxury": 1}},
         },
         "type": "midweek",
         "modifier_name": "citadel_midweek_only_t"
@@ -158,9 +158,9 @@ BUFFS = {
     "popular_opinion": {
         "name": "Popular Opinion & Control",
         "tiers": {
-            "1 Imported Luxuries": {"cost": {"Luxury": 5}},
-            "2 Circuses": {"cost": {"Luxury": 5, "Food": 5}},
-            "3 Bread And Games": {"cost": {"Luxury": 5, "Food": 5, "Stone": 5}},
+            "1 Imported Luxuries": {"cost": {"Luxury": 1}},
+            "2 Circuses": {"cost": {"Luxury": 1, "Food": 1}},
+            "3 Bread And Games": {"cost": {"Luxury": 1, "Food": 1, "Stone": 1}},
         },
         "type": "county",
         "modifier_name": "citadel_popular_t"
@@ -169,9 +169,9 @@ BUFFS = {
     "general_opinion": {
         "name": "General Opinion & Stewardship",
         "tiers": {
-            "1 Hand Bills": {"cost": {"Luxury": 5}},
-            "2 Propaganda": {"cost": {"Luxury": 5, "Iron": 5}},
-            "3 Wandering Minstrels": {"cost": {"Luxury": 5, "Iron": 5, "Food": 5}},
+            "1 Hand Bills": {"cost": {"Luxury": 1}},
+            "2 Propaganda": {"cost": {"Luxury": 1, "Iron": 1}},
+            "3 Wandering Minstrels": {"cost": {"Luxury": 1, "Iron": 1, "Food": 1}},
         },
         "type": "character",
         "modifier_name": "citadel_public_image_t"
@@ -180,9 +180,9 @@ BUFFS = {
     "vassal_opinion": {
         "name": "Vassal Opinion",
         "tiers": {
-            "1 Courtly Investments": {"cost": {"Luxury": 5}},
-            "2 Prosperous Courts": {"cost": {"Luxury": 5, "Stone": 5}},
-            "3 Vibrant Courts": {"cost": {"Luxury": 5, "Stone": 5, "Wood": 5}},
+            "1 Courtly Investments": {"cost": {"Luxury": 1}},
+            "2 Prosperous Courts": {"cost": {"Luxury": 1, "Stone": 1}},
+            "3 Vibrant Courts": {"cost": {"Luxury": 1, "Stone": 1, "Wood": 1}},
         },
         "type": "character",
         "modifier_name": "citadel_vassal_t"

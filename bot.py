@@ -158,6 +158,34 @@ def format_stockpile(region):
 
     return msg + "```"
 
+
+def split_discord_message(message, limit=2000):
+    """Split a message on line boundaries while respecting Discord's size limit."""
+    chunks = []
+    current = ""
+
+    for line in message.splitlines(keepends=True):
+        # Duchy names are normally short, but split an unexpectedly long line
+        # too, so one malformed entry cannot make the command fail.
+        while len(line) > limit:
+            if current:
+                chunks.append(current)
+                current = ""
+            chunks.append(line[:limit])
+            line = line[limit:]
+
+        if len(current) + len(line) > limit:
+            if current:
+                chunks.append(current)
+            current = line
+        else:
+            current += line
+
+    if current:
+        chunks.append(current)
+
+    return chunks or [message]
+
 # -------------------
 # Ready
 # -------------------
@@ -1431,10 +1459,14 @@ async def duchies(
 
         msg += "\n"
 
+    messages = split_discord_message(msg)
     await interaction.response.send_message(
-        msg,
+        messages[0],
         ephemeral=True
     )
+
+    for message in messages[1:]:
+        await interaction.followup.send(message, ephemeral=True)
 
 @staff.command(
     name="create_region",

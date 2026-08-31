@@ -288,11 +288,9 @@ async def assign_trader(
     description="Remove the trader assigned to a region"
 )
 @app_commands.describe(
-    region="Region whose trader should be removed"
+    user="User to remove as trader"
 )
-@app_commands.autocomplete(
-    region=region_autocomplete
-)
+
 async def remove_trader(
     interaction: discord.Interaction,
     user: discord.Member,

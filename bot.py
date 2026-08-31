@@ -130,6 +130,34 @@ def calculate_buff_cost(region, buff_type, tier):
         for resource, amount in base_cost.items()
     }
 
+
+def format_stockpile(region):
+    """Return the stockpile table, including resources with no balance row yet."""
+    data = database.get_stockpile(region)
+    economy = database.get_region_economy(region)
+
+    # Stockpile rows are only created after a resource changes.  Start with the
+    # configured resource list so a new region still shows its economy values.
+    resources = list(config.RESOURCES)
+    for resource in (*data, *economy):
+        if resource not in resources:
+            resources.append(resource)
+
+    msg = f"**{region} Stockpile**\n```"
+    msg += f"{'Resource':<10}{'Current':>8}{'Maint':>8}{'Remain':>8}{'Production':>12}\n"
+    msg += "-" * 46 + "\n"
+
+    for resource in resources:
+        amount = data.get(resource, 0)
+        values = economy.get(resource, {})
+        maint = values.get("maintenance", 0)
+        prod = values.get("production", 0)
+        remaining = amount - maint
+
+        msg += f"{resource:<10}{amount:>8}{maint:>8}{remaining:>8}{prod:>12}\n"
+
+    return msg + "```"
+
 # -------------------
 # Ready
 # -------------------
@@ -340,33 +368,7 @@ async def stockpile(interaction: discord.Interaction):
 
     sender = region
 
-    data = database.get_stockpile(region)
-    economy = database.get_region_economy(region)
-
-    maintenance = {
-        resource: values["maintenance"]
-        for resource, values in economy.items()
-    }
-
-    production = {
-        resource: values["production"]
-        for resource, values in economy.items()
-    }
-
-    msg = f"**{region} Stockpile**\n"
-    msg += "```"
-
-    msg += f"{'Resource':<8}{'Current':>8}{'Maint':>8}{'Remain':>8}{'Production':>12}\n"
-    msg += "-" * 45 + "\n"
-
-    for resource, amount in data.items():
-        maint = maintenance.get(resource, 0)
-        remaining = amount - maint
-        prod = production.get(resource, 0)
-
-        msg += f"{resource:<8}{amount:>8}{maint:>8}{remaining:>8}{prod:>8}\n"
-
-    msg += "```"
+    msg = format_stockpile(region)
     duchies = database.get_region_duchy_summary(region)
 
     msg += "\n**Duchies**\n"
@@ -414,33 +416,7 @@ async def stockpile_region(interaction: discord.Interaction, region: str):
         )
         return
 
-    data = database.get_stockpile(region)
-    economy = database.get_region_economy(region)
-
-    maintenance = {
-        resource: values["maintenance"]
-        for resource, values in economy.items()
-    }
-
-    production = {
-        resource: values["production"]
-        for resource, values in economy.items()
-    }
-    
-    msg = f"**{region} Stockpile**\n"
-    msg += "```"
-
-    msg += f"{'Resource':<8}{'Current':>8}{'Maint':>8}{'Remain':>8}{'Production':>12}\n"
-    msg += "-" * 45 + "\n"
-
-    for resource, amount in data.items():
-        maint = maintenance.get(resource, 0)
-        remaining = amount - maint
-        prod = production.get(resource, 0)
-
-        msg += f"{resource:<8}{amount:>8}{maint:>8}{remaining:>8}{prod:>8}\n"
-    
-    msg += "```"
+    msg = format_stockpile(region)
     
     print("STOCKPILE_REGION CALLED", region)
 
@@ -461,32 +437,7 @@ async def stockpile_all_regions(interaction: discord.Interaction):
         return
     for region in database.get_regions():
 
-        data = database.get_stockpile(region)
-        economy = database.get_region_economy(region)
-
-        maintenance = {
-            resource: values["maintenance"]
-            for resource, values in economy.items()
-        }
-
-        production = {
-            resource: values["production"]
-            for resource, values in economy.items()
-        }
-
-        msg = f"**{region} Stockpile**\n"
-        msg += "```"
-        msg += f"{'Resource':<8}{'Current':>8}{'Maint':>8}{'Remain':>8}{'Production':>12}\n"
-        msg += "-" * 45 + "\n"
-
-        for resource, amount in data.items():
-            maint = maintenance.get(resource, 0)
-            remaining = amount - maint
-            prod = production.get(resource, 0)
-
-            msg += f"{resource:<8}{amount:>8}{maint:>8}{remaining:>8}{prod:>8}\n"
-
-        msg += "```"
+        msg = format_stockpile(region)
 
         # Send each region separately
         await interaction.followup.send(msg, ephemeral=True)

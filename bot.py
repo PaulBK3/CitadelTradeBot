@@ -295,7 +295,7 @@ async def assign_trader(
 )
 async def remove_trader(
     interaction: discord.Interaction,
-    region: str
+    user: discord.user.mention | discord.Member | discord.User | None = None,
 ):
 
     if not has_role(
@@ -308,19 +308,19 @@ async def remove_trader(
         )
         return
 
-    trader_id = database.get_regional_trader(region)
+    trader_id = database.get_regional_trader(user)
 
     if trader_id is None:
         await interaction.response.send_message(
-            f"{region} does not currently have a trader.",
+            f"{user.mention} is not currently a trader.",
             ephemeral=True
         )
         return
 
-    database.remove_regional_trader(region)
+    database.remove_regional_trader(user)
 
     await interaction.response.send_message(
-        f"Removed the trader for **{region}**.",
+        f"Removed the trader **{user.mention}**.",
         ephemeral=True
     )
 

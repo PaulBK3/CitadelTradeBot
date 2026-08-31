@@ -1,3 +1,5 @@
+from importlib import resources
+
 import discord
 from discord import app_commands
 from discord.ext import commands, tasks
@@ -1081,10 +1083,16 @@ async def production(interaction: discord.Interaction):
 
     msg = "**Confirm Production Cycle**\n\n"
 
-    for region, resources in config.PRODUCTION.items():
+    for region in database.get_regions():
+    
+                economy = database.get_region_economy(region)
+    
+                if not economy:
+                    continue
 
-        for resource, amount in resources.items():
-            msg += f"{region}: +{amount} {resource}\n"
+                for resource, values in economy.items():
+                    amount = values["production"]
+                    msg += f"{region}: +{amount} {resource}\n"
 
     await interaction.response.send_message(
         msg,

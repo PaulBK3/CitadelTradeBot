@@ -131,10 +131,15 @@ def calculate_buff_cost(region, buff_type, tier):
     }
 
 
-def format_stockpile(region):
+def format_stockpile(region, duchy_count=None):
     """Return the stockpile table, including resources with no balance row yet."""
     data = database.get_stockpile(region)
     economy = database.get_region_economy(region)
+
+    if duchy_count is None:
+        duchy_count = len(database.get_region_duchy_summary(region))
+
+    duchy_label = "duchy" if duchy_count == 1 else "duchies"
 
     # Stockpile rows are only created after a resource changes.  Start with the
     # configured resource list so a new region still shows its economy values.
@@ -143,7 +148,7 @@ def format_stockpile(region):
         if resource not in resources:
             resources.append(resource)
 
-    msg = f"**{region} Stockpile**\n```"
+    msg = f"**{region} Stockpile ({duchy_count} {duchy_label})**\n```"
     msg += f"{'Resource':<10}{'Current':>8}{'Maint':>8}{'Remain':>8}{'Production':>12}\n"
     msg += "-" * 46 + "\n"
 
@@ -396,8 +401,8 @@ async def stockpile(interaction: discord.Interaction):
 
     sender = region
 
-    msg = format_stockpile(region)
     duchies = database.get_region_duchy_summary(region)
+    msg = format_stockpile(region, duchy_count=len(duchies))
 
     msg += "\n**Duchies**\n"
 

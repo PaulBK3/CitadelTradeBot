@@ -295,7 +295,7 @@ async def assign_trader(
 )
 async def remove_trader(
     interaction: discord.Interaction,
-    user: discord.user.mention | discord.Member | discord.User | None = None,
+    user: discord.Member,
 ):
 
     if not has_role(

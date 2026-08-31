@@ -306,15 +306,6 @@ async def remove_trader(
         )
         return
 
-    trader_id = database.get_regional_trader(user)
-
-    if trader_id is None:
-        await interaction.response.send_message(
-            f"{user.mention} is not currently a trader.",
-            ephemeral=True
-        )
-        return
-
     database.remove_regional_trader(user)
 
     await interaction.response.send_message(

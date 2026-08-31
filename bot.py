@@ -306,7 +306,7 @@ async def remove_trader(
         )
         return
 
-    database.remove_regional_trader(user)
+    database.remove_regional_trader(user.id)
 
     await interaction.response.send_message(
         f"Removed the trader **{user.mention}**.",

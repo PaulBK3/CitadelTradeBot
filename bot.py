@@ -255,7 +255,7 @@ async def assign_trader(
 
     old_user_id = database.get_regional_trader(region)
 
-    user.add_roles(config.TRADE_CHARTER_ROLE)
+    await user.add_roles(config.TRADE_CHARTER_ROLE)
 
     if old_user_id:
         old_user = interaction.guild.get_member(old_user_id)
@@ -273,7 +273,7 @@ async def assign_trader(
             f"New trader: {user.mention}"
         )
 
-        interaction.guild.get_member(old_user_id).remove_roles(config.TRADE_CHARTER_ROLE)
+        await interaction.guild.get_member(old_user_id).remove_roles(config.TRADE_CHARTER_ROLE)
 
     else:
         database.set_regional_trader(
@@ -315,7 +315,7 @@ async def remove_trader(
 
     database.remove_regional_trader(user.id)
 
-    user.remove_roles(config.TRADE_CHARTER_ROLE)
+    await user.remove_roles(config.TRADE_CHARTER_ROLE)
 
     await interaction.response.send_message(
         f"Removed the trader **{user.mention}**.",

@@ -257,7 +257,7 @@ async def assign_trader(
     user.add_roles(config.TRADE_CHARTER_ROLE)
 
     if old_user_id:
-        old_user = interaction.guild.get_member(old_user_id)
+        old_user = discord.Member(id=old_user_id, guild=interaction.guild)
 
         if old_user:
             old_name = old_user.mention

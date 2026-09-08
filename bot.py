@@ -14,6 +14,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 intents = discord.Intents.default()
+intents.members = True 
 bot = commands.Bot(command_prefix="!", intents=intents)
 
 database.setup()

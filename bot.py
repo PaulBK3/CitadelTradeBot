@@ -253,9 +253,15 @@ async def assign_trader(
         )
         return
 
+    # Find the actual Discord role from the configured role name.
+    trade_role = discord.utils.get(
+        interaction.guild.roles,
+        name=config.TRADE_CHARTER_ROLE
+    )
+
     old_user_id = database.get_regional_trader(region)
 
-    await user.add_roles(config.TRADE_CHARTER_ROLE)
+    await user.add_roles(trade_role)
 
     if old_user_id:
         old_user = interaction.guild.get_member(old_user_id)
@@ -273,7 +279,7 @@ async def assign_trader(
             f"New trader: {user.mention}"
         )
 
-        await interaction.guild.get_member(old_user_id).remove_roles(config.TRADE_CHARTER_ROLE)
+        await interaction.guild.get_member(old_user_id).remove_roles(trade_role)
 
     else:
         database.set_regional_trader(

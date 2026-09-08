@@ -254,11 +254,6 @@ async def assign_trader(
 
     old_user_id = database.get_regional_trader(region)
 
-    database.set_regional_trader(
-        region,
-        user.id
-    )
-
     user.add_roles(config.TRADE_CHARTER_ROLE)
 
     if old_user_id:
@@ -268,14 +263,23 @@ async def assign_trader(
             old_name = old_user.mention
         else:
             old_name = f"<@{old_user_id}>"
-
+        
+        database.remove_regional_trader(old_user_id)
+        
         message = (
             f"{region}'s trader has been changed.\n"
             f"Previous trader: {old_name}\n"
             f"New trader: {user.mention}"
         )
+
         old_user.remove_roles(config.TRADE_CHARTER_ROLE)
+
     else:
+        database.set_regional_trader(
+        region,
+        user.id
+        )
+
         message = (
             f"{user.mention} is now the trader for **{region}**."
         )

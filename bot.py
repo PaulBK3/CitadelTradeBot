@@ -313,7 +313,7 @@ async def remove_trader(
         ephemeral=True
     )
 
-@staff.command(
+@bot.tree.command(
     name="traders",
     description="View the trader assigned to each region"
 )
@@ -321,6 +321,7 @@ async def traders(
     interaction: discord.Interaction
 ):
 
+    """"
     if not has_role(
         interaction.user,
         config.TRADE_TEAM_ROLE
@@ -329,7 +330,7 @@ async def traders(
             "Trade Team only.",
             ephemeral=True
         )
-        return
+        return """
 
     rows = database.get_all_regional_traders()
 

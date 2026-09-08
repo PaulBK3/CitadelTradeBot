@@ -404,23 +404,6 @@ def get_contributing_duchy_count(region):
 
     return result[0] if result else 0
 
-def get_withholding_duchies():
-    cursor.execute("""
-        SELECT
-            d.name,
-            d.region,
-            dr.resource,
-            dr.production,
-            dr.maintenance
-        FROM duchies d
-        LEFT JOIN duchy_resources dr
-            ON dr.duchy = d.name
-        WHERE d.withholding=1
-        ORDER BY d.region, d.name, dr.resource
-    """)
-
-    return cursor.fetchall()
-
 def get_withholding_duchy_resources():
     cursor.execute("""
         SELECT

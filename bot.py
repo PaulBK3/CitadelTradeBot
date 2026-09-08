@@ -272,7 +272,7 @@ async def assign_trader(
             f"New trader: {user.mention}"
         )
 
-        old_user.remove_roles(config.TRADE_CHARTER_ROLE)
+        interaction.guild.get_member(old_user_id).remove_roles(config.TRADE_CHARTER_ROLE)
 
     else:
         database.set_regional_trader(

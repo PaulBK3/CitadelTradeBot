@@ -259,6 +259,8 @@ async def assign_trader(
         user.id
     )
 
+    user.add_roles(config.TRADE_CHARTER_ROLE)
+
     if old_user_id:
         old_user = interaction.guild.get_member(old_user_id)
 
@@ -272,7 +274,7 @@ async def assign_trader(
             f"Previous trader: {old_name}\n"
             f"New trader: {user.mention}"
         )
-
+        old_user.remove_roles(config.TRADE_CHARTER_ROLE)
     else:
         message = (
             f"{user.mention} is now the trader for **{region}**."
@@ -280,7 +282,7 @@ async def assign_trader(
 
     await interaction.response.send_message(
         message,
-        ephemeral=True
+        ephemeral=False
     )
 
 @staff.command(
@@ -307,6 +309,8 @@ async def remove_trader(
         return
 
     database.remove_regional_trader(user.id)
+
+    user.remove_roles(config.TRADE_CHARTER_ROLE)
 
     await interaction.response.send_message(
         f"Removed the trader **{user.mention}**.",

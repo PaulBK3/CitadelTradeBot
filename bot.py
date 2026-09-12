@@ -774,12 +774,14 @@ class TradeConfirm(discord.ui.View):
         else:
             save_edit = await save_edit_channel(interaction.guild)
             if save_edit:
+                sender_id = database.get_regional_trader(self.sender)
+                receiver_id = database.get_regional_trader(self.receiver)
                 if self.comment:
                     comment_text = f"\nComment: {self.comment}"
                 else:
                     comment_text = ""
                 await save_edit.send(
-                    f"- Transfer {self.amount} gold from {self.sender} to {self.receiver} (Trade #{trade_id}){comment_text}"
+                    f"- Transfer {self.amount} gold from {sender_id} to {receiver_id} (Trade #{trade_id}){comment_text}"
                 )
 
         msg = (

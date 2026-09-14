@@ -410,7 +410,7 @@ def get_withholding_duchy_resources():
             d.name,
             d.region,
             dr.resource,
-            dr.amount
+            dr.production
         FROM duchies d
         JOIN duchy_resources dr
             ON dr.duchy = d.name

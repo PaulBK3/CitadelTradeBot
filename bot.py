@@ -1264,9 +1264,15 @@ async def maintenance(interaction: discord.Interaction):
 
     msg = "**Confirm Maintenance Cycle**\n\n"
 
-    for region, resources in config.MAINTENANCE.items():
+    for region in database.get_regions():
+    
+        economy = database.get_region_economy(region)
+    
+        if not economy:
+            continue
 
-        for resource, amount in resources.items():
+        for resource, values in economy.items():
+            amount = values["maintenance"]
             msg += f"{region}: -{amount} {resource}\n"
 
     await interaction.response.send_message(

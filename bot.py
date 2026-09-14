@@ -281,15 +281,14 @@ async def assign_trader(
 
         await interaction.guild.get_member(old_user_id).remove_roles(trade_role)
 
-    else:
-        database.set_regional_trader(
-        region,
-        user.id
-        )
+    database.set_regional_trader(
+    region,
+    user.id
+    )
 
-        message = (
-            f"{user.mention} is now the trader for **{region}**."
-        )
+    message = (
+        f"{user.mention} is now the trader for **{region}**."
+    )
 
     await interaction.response.send_message(
         message,

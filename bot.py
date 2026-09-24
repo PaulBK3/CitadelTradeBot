@@ -132,7 +132,7 @@ def calculate_buff_cost(region, buff_type, tier):
     }
 
 
-def format_stockpile(region, duchy_count=None):
+def format_stockpile(region, duchy_count=None, compact=True):
     """Return the stockpile table, including resources with no balance row yet."""
     data = database.get_stockpile(region)
     economy = database.get_region_economy(region)
@@ -149,14 +149,15 @@ def format_stockpile(region, duchy_count=None):
         if resource not in resources:
             resources.append(resource)
 
-    #msg = f"**{region} Stockpile ({duchy_count} {duchy_label})**\n```"
-    #msg += f"{'Resource':<10}{'Current':>8}{'Maint':>8}{'Remain':>8}{'Production':>12}\n"
-    #msg += "-" * 46 + "\n"
-
-    msg = (
-        f"## {region} Stockpile\n"
-        f"*{duchy_count} contributing {duchy_label}*\n\n"
-    )
+    if compact:
+        msg = (
+            f"## {region} Stockpile\n"
+            f"*{duchy_count} contributing {duchy_label}*\n\n"
+        )
+    else:
+        msg = f"**{region} Stockpile ({duchy_count} {duchy_label})**\n```"
+        msg += f"{'Resource':<10}{'Current':>8}{'Maint':>8}{'Remain':>8}{'Production':>12}\n"
+        msg += "-" * 46 + "\n"
 
     for resource in resources:
         amount = data.get(resource, 0)
@@ -165,14 +166,19 @@ def format_stockpile(region, duchy_count=None):
         prod = values.get("production", 0)
         remaining = amount - maint
 
-        msg += (
-            f"**{resource}** — `{amount}` "
-            f"→ `{remaining}` after maintenance\n"
-            f"↳ Maint `-{maint}` · Prod `+{prod}`\n\n"
-        )
-        #msg += f"{resource:<10}{amount:>8}{maint:>8}{remaining:>8}{prod:>12}\n"
+        if compact:
+            msg += (
+                f"**{resource}** — `{amount}` "
+                f"→ `{remaining}` after maintenance\n"
+                f"↳ Maint `-{maint}` · Prod `+{prod}`\n\n"
+            )
+        else:
+            msg += f"{resource:<10}{amount:>8}{maint:>8}{remaining:>8}{prod:>12}\n"
 
-    return msg #+ "```"
+    if compact:
+        return msg + "```"
+    else:
+        return msg + "```"
 
 
 def split_discord_message(message, limit=2000):
@@ -394,7 +400,16 @@ async def traders(
 
 #for player
 @bot.tree.command(name="stockpile", description="View your region's stockpile")
-async def stockpile(interaction: discord.Interaction):
+@app_commands.describe(
+    compact="Default view is compact, with a summary of each resource."
+)
+@app_commands.choices(
+    compact=[
+        app_commands.Choice(name="Compact", value=True),
+        app_commands.Choice(name="Table", value=False)
+    ]
+)
+async def stockpile(interaction: discord.Interaction, compact: bool = True):
     await interaction.response.defer(ephemeral=True)
 
     if not has_role(interaction.user, config.TRADE_CHARTER_ROLE) and not has_role(interaction.user, config.GREAT_HOUSE_ROLE):
@@ -414,7 +429,7 @@ async def stockpile(interaction: discord.Interaction):
         return
 
     duchies = database.get_region_duchy_summary(region)
-    msg = format_stockpile(region, duchy_count=len(duchies))
+    msg = format_stockpile(region, duchy_count=len(duchies), compact=compact)
 
     msg += "\n**Duchies**\n"
 
@@ -435,13 +450,18 @@ async def stockpile(interaction: discord.Interaction):
 
 @staff.command(name="stockpile_region", description="View a specific region's stockpile")
 
-@app_commands.describe(region="Region to inspect")
-
+@app_commands.describe(region="Region to inspect", compact="Default view is compact")
+@app_commands.choices(
+    compact=[
+        app_commands.Choice(name="Compact", value=True),
+        app_commands.Choice(name="Table", value=False)
+    ]
+)
 @app_commands.autocomplete(
     region=region_autocomplete
 )
 
-async def stockpile_region(interaction: discord.Interaction, region: str):
+async def stockpile_region(interaction: discord.Interaction, region: str, compact: bool = True):
 
     await interaction.response.defer(ephemeral=True)
 
@@ -462,7 +482,7 @@ async def stockpile_region(interaction: discord.Interaction, region: str):
         return
 
     duchies = database.get_region_duchy_summary(region)
-    msg = format_stockpile(region, duchy_count=len(duchies))
+    msg = format_stockpile(region, duchy_count=len(duchies), compact=compact)
 
     msg += "\n**Duchies**\n"
 
@@ -494,7 +514,7 @@ async def stockpile_all_regions(interaction: discord.Interaction):
         return
     for region in database.get_regions():
 
-        msg = format_stockpile(region)
+        msg = format_stockpile(region, compact=False)
 
         # Send each region separately
         await interaction.followup.send(msg, ephemeral=True)
@@ -503,8 +523,14 @@ async def stockpile_all_regions(interaction: discord.Interaction):
 # VIEW LAST TRANSFERS
 # -------------------
 
-@bot.tree.command(name="transactions", description="View the last transactions from and to your region")
-async def transactions(interaction: discord.Interaction):
+@bot.tree.command(name="transactions", description="View the last transactions from and to your region", compact="Default view is compact, set Table for table view")
+@app_commands.choices(
+    compact=[
+        app_commands.Choice(name="Compact", value=True),
+        app_commands.Choice(name="Table", value=False)
+    ]
+)
+async def transactions(interaction: discord.Interaction, compact: bool = True):
     await interaction.response.defer(ephemeral=True)
 
     if not has_role(interaction.user, config.TRADE_CHARTER_ROLE) and not has_role(interaction.user, config.GREAT_HOUSE_ROLE):
@@ -531,41 +557,40 @@ async def transactions(interaction: discord.Interaction):
             ephemeral=True
         )
         return
+    if compact:
+        msg = f"## {region} — Last Transactions\n\n"
 
-    msg = f"## {region} — Last Transactions\n\n"
+        for trade_id, sender, receiver, resource, amount, timestamp in transfers:
 
-    for trade_id, sender, receiver, resource, amount, timestamp in transfers:
+            if sender == region:
+                direction = "📤 Out"
+                partner = receiver
+            else:
+                direction = "📥 In"
+                partner = sender
 
-        if sender == region:
-            direction = "📤 Out"
-            partner = receiver
-        else:
-            direction = "📥 In"
-            partner = sender
+            msg += (
+                f"**#{trade_id} · {direction}**\n"
+                f"{resource}: **{amount}**\n"
+                f"Partner: {partner}\n\n"
+            )
+    else:
+        msg = f"**{region} - Last Transactions**\n"
+        msg += "```\n"
+        msg += f"{'ID':<5}{'Direction':<12}{'Partner':<15}{'Resource':<12}{'Amount':<8}\n"
+        msg += "-" * 55 + "\n"
 
-        msg += (
-            f"**#{trade_id} · {direction}**\n"
-            f"{resource}: **{amount}**\n"
-            f"Partner: {partner}\n\n"
-        )
-    '''
-    msg = f"**{region} - Last Transactions**\n"
-    msg += "```\n"
-    msg += f"{'ID':<5}{'Direction':<12}{'Partner':<15}{'Resource':<12}{'Amount':<8}\n"
-    msg += "-" * 55 + "\n"
+        for trade_id, sender, receiver, resource, amount, timestamp in transfers:
+            if sender == region:
+                direction = "→ OUT"
+                partner = receiver
+            else:
+                direction = "← IN"
+                partner = sender
+            
+            msg += f"{trade_id:<5}{direction:<12}{partner:<15}{resource:<12}{amount:<8}\n"
 
-    for trade_id, sender, receiver, resource, amount, timestamp in transfers:
-        if sender == region:
-            direction = "→ OUT"
-            partner = receiver
-        else:
-            direction = "← IN"
-            partner = sender
-        
-        msg += f"{trade_id:<5}{direction:<12}{partner:<15}{resource:<12}{amount:<8}\n"
-
-    msg += "```"
-    '''
+        msg += "```"
 
     await interaction.followup.send(msg, ephemeral=True)
 

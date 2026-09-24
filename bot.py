@@ -405,11 +405,11 @@ async def traders(
 )
 @app_commands.choices(
     compact=[
-        app_commands.Choice(name="Compact", value=True),
-        app_commands.Choice(name="Table", value=False)
+        app_commands.Choice(name="Compact", value="compact"),
+        app_commands.Choice(name="Table", value="table")
     ]
 )
-async def stockpile(interaction: discord.Interaction, compact: bool = True):
+async def stockpile(interaction: discord.Interaction, compact: str = "compact"):
     await interaction.response.defer(ephemeral=True)
 
     if not has_role(interaction.user, config.TRADE_CHARTER_ROLE) and not has_role(interaction.user, config.GREAT_HOUSE_ROLE):
@@ -429,6 +429,10 @@ async def stockpile(interaction: discord.Interaction, compact: bool = True):
         return
 
     duchies = database.get_region_duchy_summary(region)
+    if compact == "compact":
+        compact = True
+    else:
+        compact = False
     msg = format_stockpile(region, duchy_count=len(duchies), compact=compact)
 
     msg += "\n**Duchies**\n"
@@ -453,15 +457,15 @@ async def stockpile(interaction: discord.Interaction, compact: bool = True):
 @app_commands.describe(region="Region to inspect", compact="Default view is compact")
 @app_commands.choices(
     compact=[
-        app_commands.Choice(name="Compact", value=True),
-        app_commands.Choice(name="Table", value=False)
+        app_commands.Choice(name="Compact", value="compact"),
+        app_commands.Choice(name="Table", value="table")
     ]
 )
 @app_commands.autocomplete(
     region=region_autocomplete
 )
 
-async def stockpile_region(interaction: discord.Interaction, region: str, compact: bool = True):
+async def stockpile_region(interaction: discord.Interaction, region: str, compact: str = "compact"):
 
     await interaction.response.defer(ephemeral=True)
 
@@ -482,6 +486,10 @@ async def stockpile_region(interaction: discord.Interaction, region: str, compac
         return
 
     duchies = database.get_region_duchy_summary(region)
+    if compact == "compact":
+        compact = True
+    else:
+        compact = False
     msg = format_stockpile(region, duchy_count=len(duchies), compact=compact)
 
     msg += "\n**Duchies**\n"
@@ -526,11 +534,11 @@ async def stockpile_all_regions(interaction: discord.Interaction):
 @bot.tree.command(name="transactions", description="View the last transactions from and to your region", compact="Default view is compact, set Table for table view")
 @app_commands.choices(
     compact=[
-        app_commands.Choice(name="Compact", value=True),
-        app_commands.Choice(name="Table", value=False)
+        app_commands.Choice(name="Compact", value="compact"),
+        app_commands.Choice(name="Table", value="table")
     ]
 )
-async def transactions(interaction: discord.Interaction, compact: bool = True):
+async def transactions(interaction: discord.Interaction, compact: str = "compact"):
     await interaction.response.defer(ephemeral=True)
 
     if not has_role(interaction.user, config.TRADE_CHARTER_ROLE) and not has_role(interaction.user, config.GREAT_HOUSE_ROLE):
@@ -557,7 +565,7 @@ async def transactions(interaction: discord.Interaction, compact: bool = True):
             ephemeral=True
         )
         return
-    if compact:
+    if compact == "compact":
         msg = f"## {region} — Last Transactions\n\n"
 
         for trade_id, sender, receiver, resource, amount, timestamp in transfers:

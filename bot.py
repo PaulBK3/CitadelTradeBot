@@ -461,7 +461,19 @@ async def stockpile_region(interaction: discord.Interaction, region: str):
         )
         return
 
-    msg = format_stockpile(region)
+    duchies = database.get_region_duchy_summary(region)
+    msg = format_stockpile(region, duchy_count=len(duchies))
+
+    msg += "\n**Duchies**\n"
+
+    if not duchies:
+        msg += "No duchies registered.\n"
+    else:
+        for name, withholding in duchies:
+            if withholding:
+                msg += f"✗ {name} — WITHHOLDING\n"
+            else:
+                msg += f"✓ {name}\n"
     
     print("STOCKPILE_REGION CALLED", region)
 

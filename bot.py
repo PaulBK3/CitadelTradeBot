@@ -149,9 +149,14 @@ def format_stockpile(region, duchy_count=None):
         if resource not in resources:
             resources.append(resource)
 
-    msg = f"**{region} Stockpile ({duchy_count} {duchy_label})**\n```"
-    msg += f"{'Resource':<10}{'Current':>8}{'Maint':>8}{'Remain':>8}{'Production':>12}\n"
-    msg += "-" * 46 + "\n"
+    #msg = f"**{region} Stockpile ({duchy_count} {duchy_label})**\n```"
+    #msg += f"{'Resource':<10}{'Current':>8}{'Maint':>8}{'Remain':>8}{'Production':>12}\n"
+    #msg += "-" * 46 + "\n"
+
+    msg = (
+        f"## {region} Stockpile\n"
+        f"*{duchy_count} contributing {duchy_label}*\n\n"
+    )
 
     for resource in resources:
         amount = data.get(resource, 0)
@@ -160,7 +165,12 @@ def format_stockpile(region, duchy_count=None):
         prod = values.get("production", 0)
         remaining = amount - maint
 
-        msg += f"{resource:<10}{amount:>8}{maint:>8}{remaining:>8}{prod:>12}\n"
+        msg += (
+            f"**{resource}** — `{amount}` "
+            f"→ `{remaining}` after maintenance\n"
+            f"↳ Maint `-{maint}` · Prod `+{prod}`\n\n"
+        )
+        #msg += f"{resource:<10}{amount:>8}{maint:>8}{remaining:>8}{prod:>12}\n"
 
     return msg + "```"
 
@@ -403,8 +413,6 @@ async def stockpile(interaction: discord.Interaction):
         )
         return
 
-    sender = region
-
     duchies = database.get_region_duchy_summary(region)
     msg = format_stockpile(region, duchy_count=len(duchies))
 
@@ -512,6 +520,23 @@ async def transactions(interaction: discord.Interaction):
         )
         return
 
+    msg = f"## {region} — Last Transactions\n\n"
+
+    for trade_id, sender, receiver, resource, amount, timestamp in transfers:
+
+        if sender == region:
+            direction = "📤 Out"
+            partner = receiver
+        else:
+            direction = "📥 In"
+            partner = sender
+
+        msg += (
+            f"**#{trade_id} · {direction}**\n"
+            f"{resource}: **{amount}**\n"
+            f"Partner: {partner}\n\n"
+        )
+    '''
     msg = f"**{region} - Last Transactions**\n"
     msg += "```\n"
     msg += f"{'ID':<5}{'Direction':<12}{'Partner':<15}{'Resource':<12}{'Amount':<8}\n"
@@ -528,6 +553,7 @@ async def transactions(interaction: discord.Interaction):
         msg += f"{trade_id:<5}{direction:<12}{partner:<15}{resource:<12}{amount:<8}\n"
 
     msg += "```"
+    '''
 
     await interaction.followup.send(msg, ephemeral=True)
 

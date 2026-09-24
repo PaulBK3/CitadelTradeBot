@@ -531,7 +531,7 @@ async def stockpile_all_regions(interaction: discord.Interaction):
 # VIEW LAST TRANSFERS
 # -------------------
 
-@bot.tree.command(name="transactions", description="View the last transactions from and to your region", compact="Default view is compact, set Table for table view")
+@bot.tree.command(name="transactions", description="View the last transactions from and to your region")
 @app_commands.choices(
     compact=[
         app_commands.Choice(name="Compact", value="compact"),

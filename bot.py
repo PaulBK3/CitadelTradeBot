@@ -494,7 +494,7 @@ async def transactions(interaction: discord.Interaction):
         )
         return
 
-    region = get_region(interaction.user)
+    region = database.get_trader_region(interaction.user.id)
 
     if not region:
         await interaction.followup.send(

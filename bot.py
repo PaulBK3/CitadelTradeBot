@@ -851,7 +851,7 @@ class TradeConfirm(discord.ui.View):
                 else:
                     comment_text = ""
                 await save_edit.send(
-                    f"- Transfer {self.amount} gold from {interaction.guild.get_member(sender_id)} to {interaction.guild.get_member(receiver_id)} (Trade #{trade_id}){comment_text}"
+                    f"- Transfer {self.amount} gold from {interaction.guild.get_member(sender_id).mention} to {interaction.guild.get_member(receiver_id).mention} (Trade #{trade_id}){comment_text}"
                 )
 
         msg = (

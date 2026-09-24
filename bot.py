@@ -172,7 +172,7 @@ def format_stockpile(region, duchy_count=None):
         )
         #msg += f"{resource:<10}{amount:>8}{maint:>8}{remaining:>8}{prod:>12}\n"
 
-    return msg + "```"
+    return msg #+ "```"
 
 
 def split_discord_message(message, limit=2000):

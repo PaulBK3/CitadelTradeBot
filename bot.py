@@ -176,7 +176,7 @@ def format_stockpile(region, duchy_count=None, compact=True):
             msg += f"{resource:<10}{amount:>8}{maint:>8}{remaining:>8}{prod:>12}\n"
 
     if compact:
-        return msg + "```"
+        return msg
     else:
         return msg + "```"
 
@@ -321,7 +321,7 @@ async def assign_trader(
 
 async def remove_trader(
     interaction: discord.Interaction,
-    user: discord.Member,
+    user: discord.Member
 ):
 
     if not has_role(

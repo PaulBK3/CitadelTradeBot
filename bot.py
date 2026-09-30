@@ -415,7 +415,7 @@ async def traders(
 async def stockpile(interaction: discord.Interaction, compact: str = "compact"):
     await interaction.response.defer(ephemeral=True)
 
-    if not has_role(interaction.user, get_trade_role(interaction)) and not has_role(interaction.user, config.GREAT_HOUSE_ROLE):
+    if not has_role(interaction.user, config.TRADE_CHARTER_ROLE) and not has_role(interaction.user, config.GREAT_HOUSE_ROLE):
         await interaction.followup.send(
             "You need the Trade Charter or Great House role.",
             ephemeral=True
@@ -544,7 +544,7 @@ async def stockpile_all_regions(interaction: discord.Interaction):
 async def transactions(interaction: discord.Interaction, compact: str = "compact"):
     await interaction.response.defer(ephemeral=True)
 
-    if not has_role(interaction.user, get_trade_role(interaction)) and not has_role(interaction.user, config.GREAT_HOUSE_ROLE):
+    if not has_role(interaction.user, config.TRADE_CHARTER_ROLE) and not has_role(interaction.user, config.GREAT_HOUSE_ROLE):
         await interaction.followup.send(
             "You need the Trade Charter or Great House role.",
             ephemeral=True
@@ -754,7 +754,7 @@ class BuyBuffConfirm(discord.ui.View):
 
 async def buy_buff(interaction: discord.Interaction, buff_type: str, tier: int):
 
-    if not has_role(interaction.user, get_trade_role(interaction)):
+    if not has_role(interaction.user, config.TRADE_CHARTER_ROLE):
 
         await interaction.response.send_message(
             "Charter only",
@@ -930,7 +930,7 @@ async def trade(
     comment: str | None = None
 ):
 
-    if not has_role(interaction.user, get_trade_role(interaction)):
+    if not has_role(interaction.user, config.TRADE_CHARTER_ROLE):
 
         await interaction.response.send_message(
             "You lack Trade CHARTA.",
@@ -1049,7 +1049,7 @@ async def modify_stockpile(
 
     await interaction.response.defer(ephemeral=True)
 
-    if not has_role(interaction.user, get_trade_role(interaction)):
+    if not has_role(interaction.user, config.TRADE_TEAM_ROLE):
 
         await interaction.followup.send(
             "Trade Team only.",
@@ -1137,7 +1137,7 @@ class ProductionConfirm(discord.ui.View):
 
 async def production(interaction: discord.Interaction):
 
-    if not has_role(interaction.user, get_trade_role(interaction)):
+    if not has_role(interaction.user, config.TRADE_TEAM_ROLE):
 
         await interaction.response.send_message(
             "Trade Team only.",

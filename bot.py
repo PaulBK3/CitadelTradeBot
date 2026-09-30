@@ -208,6 +208,13 @@ def split_discord_message(message, limit=2000):
 
     return chunks or [message]
 
+def get_trade_role(interaction):
+    # Find the actual Discord role from the configured role name.
+    trade_role = discord.utils.get(
+        interaction.guild.roles,
+        name=config.TRADE_CHARTER_ROLE
+    )
+    return trade_role
 # -------------------
 # Ready
 # -------------------
@@ -269,15 +276,11 @@ async def assign_trader(
         )
         return
 
-    # Find the actual Discord role from the configured role name.
-    trade_role = discord.utils.get(
-        interaction.guild.roles,
-        name=config.TRADE_CHARTER_ROLE
-    )
+
 
     old_user_id = database.get_regional_trader(region)
 
-    await user.add_roles(trade_role)
+    await user.add_roles(get_trade_role(interaction))
 
     if old_user_id:
         old_user = interaction.guild.get_member(old_user_id)
@@ -295,7 +298,7 @@ async def assign_trader(
             f"New trader: {user.mention}"
         )
 
-        await interaction.guild.get_member(old_user_id).remove_roles(trade_role)
+        await interaction.guild.get_member(old_user_id).remove_roles(get_trade_role(interaction))
 
     database.set_regional_trader(
     region,
@@ -336,7 +339,7 @@ async def remove_trader(
 
     database.remove_regional_trader(user.id)
 
-    await user.remove_roles(config.TRADE_CHARTER_ROLE)
+    await user.remove_roles(get_trade_role(interaction))
 
     await interaction.response.send_message(
         f"Removed the trader **{user.mention}**.",
@@ -412,7 +415,7 @@ async def traders(
 async def stockpile(interaction: discord.Interaction, compact: str = "compact"):
     await interaction.response.defer(ephemeral=True)
 
-    if not has_role(interaction.user, config.TRADE_CHARTER_ROLE) and not has_role(interaction.user, config.GREAT_HOUSE_ROLE):
+    if not has_role(interaction.user, get_trade_role(interaction)) and not has_role(interaction.user, config.GREAT_HOUSE_ROLE):
         await interaction.followup.send(
             "You need the Trade Charter or Great House role.",
             ephemeral=True
@@ -469,7 +472,7 @@ async def stockpile_region(interaction: discord.Interaction, region: str, compac
 
     await interaction.response.defer(ephemeral=True)
 
-    if not has_role(interaction.user, config.TRADE_TEAM_ROLE):
+    if not has_role(interaction.user, get_trade_role(interaction)):
 
         await interaction.followup.send(
             "Trade Team only.",
@@ -513,7 +516,7 @@ async def stockpile_all_regions(interaction: discord.Interaction):
 
     await interaction.response.defer(ephemeral=True)
 
-    if not has_role(interaction.user, config.TRADE_TEAM_ROLE):
+    if not has_role(interaction.user, get_trade_role(interaction)):
 
         await interaction.followup.send(
             "Trade Team only.",
@@ -541,7 +544,7 @@ async def stockpile_all_regions(interaction: discord.Interaction):
 async def transactions(interaction: discord.Interaction, compact: str = "compact"):
     await interaction.response.defer(ephemeral=True)
 
-    if not has_role(interaction.user, config.TRADE_CHARTER_ROLE) and not has_role(interaction.user, config.GREAT_HOUSE_ROLE):
+    if not has_role(interaction.user, get_trade_role(interaction)) and not has_role(interaction.user, config.GREAT_HOUSE_ROLE):
         await interaction.followup.send(
             "You need the Trade Charter or Great House role.",
             ephemeral=True
@@ -659,7 +662,7 @@ async def transfer_resources(
     receiver: str
 ):
 
-    if not has_role(interaction.user, config.TRADE_TEAM_ROLE):
+    if not has_role(interaction.user, get_trade_role(interaction)):
 
         await interaction.response.send_message(
             "Trade Team only.",
@@ -751,7 +754,7 @@ class BuyBuffConfirm(discord.ui.View):
 
 async def buy_buff(interaction: discord.Interaction, buff_type: str, tier: int):
 
-    if not has_role(interaction.user, config.TRADE_CHARTER_ROLE):
+    if not has_role(interaction.user, get_trade_role(interaction)):
 
         await interaction.response.send_message(
             "Charter only",
@@ -927,7 +930,7 @@ async def trade(
     comment: str | None = None
 ):
 
-    if not has_role(interaction.user, config.TRADE_CHARTER_ROLE):
+    if not has_role(interaction.user, get_trade_role(interaction)):
 
         await interaction.response.send_message(
             "You lack Trade CHARTA.",
@@ -1046,7 +1049,7 @@ async def modify_stockpile(
 
     await interaction.response.defer(ephemeral=True)
 
-    if not has_role(interaction.user,config.TRADE_TEAM_ROLE):
+    if not has_role(interaction.user, get_trade_role(interaction)):
 
         await interaction.followup.send(
             "Trade Team only.",
@@ -1134,7 +1137,7 @@ class ProductionConfirm(discord.ui.View):
 
 async def production(interaction: discord.Interaction):
 
-    if not has_role(interaction.user, config.TRADE_TEAM_ROLE):
+    if not has_role(interaction.user, get_trade_role(interaction)):
 
         await interaction.response.send_message(
             "Trade Team only.",

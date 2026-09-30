@@ -472,7 +472,7 @@ async def stockpile_region(interaction: discord.Interaction, region: str, compac
 
     await interaction.response.defer(ephemeral=True)
 
-    if not has_role(interaction.user, get_trade_role(interaction)):
+    if not has_role(interaction.user, config.TRADE_TEAM_ROLE):
 
         await interaction.followup.send(
             "Trade Team only.",
@@ -516,7 +516,7 @@ async def stockpile_all_regions(interaction: discord.Interaction):
 
     await interaction.response.defer(ephemeral=True)
 
-    if not has_role(interaction.user, get_trade_role(interaction)):
+    if not has_role(interaction.user, config.TRADE_TEAM_ROLE):
 
         await interaction.followup.send(
             "Trade Team only.",
@@ -662,7 +662,7 @@ async def transfer_resources(
     receiver: str
 ):
 
-    if not has_role(interaction.user, get_trade_role(interaction)):
+    if not has_role(interaction.user, config.TRADE_TEAM_ROLE):
 
         await interaction.response.send_message(
             "Trade Team only.",

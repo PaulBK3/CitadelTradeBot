@@ -1380,11 +1380,11 @@ async def maintenance(interaction: discord.Interaction):
 @app_commands.describe(
     name="Name of the duchy",
     region="Region the duchy belongs to",
-    Food="Food production,maintenance (e.g. 10,5)",
-    Wood="Wood production,maintenance (e.g. 10,5)",
-    Stone="Stone production,maintenance (e.g. 10,5)",
-    Iron="Iron production,maintenance (e.g. 10,5)",
-    Luxury="Luxury production,maintenance (e.g. 10,5)"
+    food="Food production,maintenance (e.g. 10,5)",
+    wood="Wood production,maintenance (e.g. 10,5)",
+    stone="Stone production,maintenance (e.g. 10,5)",
+    iron="Iron production,maintenance (e.g. 10,5)",
+    luxury="Luxury production,maintenance (e.g. 10,5)"
 )
 @app_commands.autocomplete(region=region_autocomplete)
 async def create_duchy(

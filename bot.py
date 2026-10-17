@@ -215,6 +215,23 @@ def get_trade_role(interaction):
         name=config.TRADE_CHARTER_ROLE
     )
     return trade_role
+
+def parse_resource(value: str | None) -> tuple[int, int] | None:
+    if value is None or not value.strip():
+        return None
+
+    try:
+        production, maintenance = map(int, value.split(","))
+
+        if production < 0 or maintenance < 0:
+            raise ValueError
+
+        return production, maintenance
+
+    except ValueError:
+        raise ValueError(
+            "Invalid resource format. Use Prod,Maint (e.g. 10,5)."
+        )
 # -------------------
 # Ready
 # -------------------
@@ -1360,20 +1377,27 @@ async def maintenance(interaction: discord.Interaction):
 # -------------------------------
 @staff.command(name="create_duchy",description="Create a duchy")
 
-@app_commands.describe(name="Name of the duchy", region="Region the duchy belongs to")
-@app_commands.autocomplete(
-    region=region_autocomplete
+@app_commands.describe(
+    name="Name of the duchy",
+    region="Region the duchy belongs to",
+    Food="Food production,maintenance (e.g. 10,5)",
+    Wood="Wood production,maintenance (e.g. 10,5)",
+    Stone="Stone production,maintenance (e.g. 10,5)",
+    Iron="Iron production,maintenance (e.g. 10,5)",
+    Luxury="Luxury production,maintenance (e.g. 10,5)"
 )
+@app_commands.autocomplete(region=region_autocomplete)
 async def create_duchy(
     interaction: discord.Interaction,
     name: str,
-    region: str
+    region: str,
+    Food: str | None = None,
+    Wood: str | None = None,
+    Stone: str | None = None,
+    Iron: str | None = None,
+    Luxury: str | None = None
 ):
-
-    if not has_role(
-        interaction.user,
-        config.TRADE_TEAM_ROLE
-    ):
+    if not has_role(interaction.user, config.TRADE_TEAM_ROLE):
         await interaction.response.send_message(
             "Trade Team only.",
             ephemeral=True
@@ -1387,10 +1411,78 @@ async def create_duchy(
         )
         return
 
+    # Validate all resource inputs before creating the duchy
+    resource_inputs = {
+        "Food": Food,
+        "Wood": Wood,
+        "Stone": Stone,
+        "Iron": Iron,
+        "Luxury": Luxury,
+    }
+
+    try:
+        resources = {
+            resource: parse_resource(value)
+            for resource, value in resource_inputs.items()
+        }
+    except ValueError as e:
+        await interaction.response.send_message(
+            str(e),
+            ephemeral=True
+        )
+        return
+
     database.create_duchy(name, region)
+
+    for resource, values in resources.items():
+        if values is None:
+            continue
+
+        production, maintenance = values
+
+        database.set_duchy_resources(
+            name,
+            resource,
+            production,
+            maintenance
+        )
 
     await interaction.response.send_message(
         f"Created **{name}** in **{region}**.",
+        ephemeral=True
+    )
+
+@staff.command(
+    name="delete_duchy", description="Delete a duchy"
+)
+@app_commands.describe(
+    duchy="Duchy to delete"
+)
+@app_commands.autocomplete(
+    duchy=duchy_autocomplete
+)
+async def delete_duchy(
+    interaction: discord.Interaction,
+    duchy: str
+):
+    if not has_role(interaction.user, config.TRADE_TEAM_ROLE):
+        await interaction.response.send_message(
+            "Trade Team only.",
+            ephemeral=True
+        )
+        return
+
+    if not database.duchy_exists(duchy):
+        await interaction.response.send_message(
+            "Unknown duchy.",
+            ephemeral=True
+        )
+        return
+
+    database.delete_duchy(duchy)
+
+    await interaction.response.send_message(
+        f"Deleted **{duchy}**.",
         ephemeral=True
     )
 

@@ -350,6 +350,29 @@ def is_duchy_withholding(name):
 
     return bool(result[0]) if result else False
 
+def set_duchy_resources(name, resource, production, maintenance):
+    cursor.execute("""
+        INSERT INTO duchy_resources(duchy, resource, production, maintenance)
+        VALUES (?, ?, ?, ?)
+        ON CONFLICT(duchy, resource)
+        DO UPDATE SET production = excluded.production,
+                      maintenance = excluded.maintenance
+    """, (name, resource, production, maintenance))
+
+    conn.commit()
+
+def delete_duchy(name):
+    cursor.execute("""
+        DELETE FROM duchies
+        WHERE name=?
+    """, (name,))
+
+    cursor.execute("""
+        DELETE FROM duchy_resources
+        WHERE duchy=?
+    """, (name,))
+
+    conn.commit()
 # -------------------
 # DUCHY ECONOMY
 # -------------------

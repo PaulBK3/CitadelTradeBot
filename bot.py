@@ -1391,11 +1391,11 @@ async def create_duchy(
     interaction: discord.Interaction,
     name: str,
     region: str,
-    Food: str | None = None,
-    Wood: str | None = None,
-    Stone: str | None = None,
-    Iron: str | None = None,
-    Luxury: str | None = None
+    food: str | None = None,
+    wood: str | None = None,
+    stone: str | None = None,
+    iron: str | None = None,
+    luxury: str | None = None
 ):
     if not has_role(interaction.user, config.TRADE_TEAM_ROLE):
         await interaction.response.send_message(
@@ -1413,11 +1413,11 @@ async def create_duchy(
 
     # Validate all resource inputs before creating the duchy
     resource_inputs = {
-        "Food": Food,
-        "Wood": Wood,
-        "Stone": Stone,
-        "Iron": Iron,
-        "Luxury": Luxury,
+        "Food": food,
+        "Wood": wood,
+        "Stone": stone,
+        "Iron": iron,
+        "Luxury": luxury,
     }
 
     try:
